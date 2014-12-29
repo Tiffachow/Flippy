@@ -50,14 +50,12 @@ var lastKeydown = "up";
 var isRunning;
 
 // Retry variables
-var overLink = false;
 var RETRY_X;
 var RETRY_Y = 660;
 var RETRY_WIDTH;
 var RETRY_HEIGHT = 120;
 var x = null,
     y = null;
-var z = false;
 
 
 
@@ -304,17 +302,21 @@ function drawTimer() {
 function createChar() {
     // If up is pressed, draw rightside up img
     if (upKeydown === true) {
-        drawCat(charImg, position.cat_x, 472);
-        // Set last position as up
-        lastKeydown = "up";
+        if (isRunning) {
+            drawCat(charImg, position.cat_x, 472);
+            // Set last position as up
+            lastKeydown = "up";
+        }
         // Reset keydown event listener variable
         upKeydown = false;
     }
     // If down is pressed, draw upside down img
     else if (downKeydown === true) {
-        drawCat(charImgR, position.cat_x, 497);
-        // Set last position as down
-        lastKeydown = "down";
+        if (isRunning) {
+            drawCat(charImgR, position.cat_x, 497);
+            // Set last position as down
+            lastKeydown = "down";
+        }
         // Reset keydown event listener variable
         downKeydown = false;
     }
@@ -365,76 +367,76 @@ function loadGameOver() {
     flippyCtx.fillText("Retry?", RETRY_X, RETRY_Y);
     // Cue Flippy Lose audio clip
     loseAudio.play();
-
-    $(document).mousemove(function(event) {
-        // Get the mouse position relative to the canvas element.
-        if (event.pageX) {
-            x = event.pageX;
-            y = event.pageY;
-        }
-
-        if (x !== null && y !== null) {
+    
+    if (intersectsChar() === true) {
+        $(document).mousemove(function(event) {
+            // Get the mouse position relative to the canvas element.
+                if (event.pageX) {
+                    x = event.pageX;
+                    y = event.pageY;
+                }
+                
             RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 40;
             RETRY_WIDTH = flippyCtx.measureText("Retry?").width * 2;
-            RETRY_Y = 660 + 40;
-
-            //is the mouse over the link?
+            RETRY_Y = 660 + 40;    
+                
+            // If mouse is over retry area:    
             if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT)) {
+                // Change the cursor into a pointer
                 document.body.style.cursor = "pointer";
-                overLink = true;
             }
+            // If not over the retry area, cursor is normal
             else {
                 document.body.style.cursor = "";
-                overLink = false;
             }
-        }
+        });
+    }
 
-        if (overLink) {
-            // If the retry link has been clicked, restart the game, not resume it
-            if (z) { // Reset render()'s variables to its initial values and run render
-                
-                ACCELERATION = 60;
-                
-                // Reset the line position and view position
-                position = {
-                    y: BASE_POS,
-                    cat_x: canvas.width / 2
-                };
-                view = {
-                    left_x: 0,
-                    right_x: canvas.width
-                };
-                
-                // Clear the history arrays
-                positionHistory.length = 0;
-                lastElems.length = 0;
-                
-                // Reset the character to default position
-                upKeydown = false;
-                downKeydown = false;
-                lastKeydown = "up";
-                
-                // Run the game!
-                render();
-                
-                // Reset the timer to its initial conditions and run it from the start!
-                MS_ELAPSED = 0;
-                MS_RESET_COUNTER = 0;
-                SEC_ELAPSED = 0;
-                SEC_RESET_COUNTER = 0;
-                MIN_ELAPSED = 0;
-                drawTimer();
-                
-                // Reset the variable that checks whether the retry link has been clicked
-                z = false;
-            }
+    $(document).click(function(ev) { // Check if player has clicked
+
+        // Is the mouse over retry area (and user has clicked)?
+        if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT)) {
+            
+            // Allow player to RETRY by:
+            // Reset render()'s variables to its initial values and run render
+            
+            clearTimeout(timerTimeout);
+            clearTimeout(renderTimeout);
+            ACCELERATION = 60;
+            
+            // Reset the line position and view position
+            position = {
+                y: BASE_POS,
+                cat_x: canvas.width / 2
+            };
+            view = {
+                left_x: 0,
+                right_x: canvas.width
+            };
+            
+            // Clear the history arrays
+            positionHistory.length = 0;
+            lastElems.length = 0;
+            
+            // Reset the character to default position
+            upKeydown = false;
+            downKeydown = false;
+            lastKeydown = "up";
+            
+            // Run the game!
+            render();
+            
+            // Reset the timer to its initial conditions and run it from the start!
+            MS_ELAPSED = 0;
+            MS_RESET_COUNTER = 0;
+            SEC_ELAPSED = 0;
+            SEC_RESET_COUNTER = 0;
+            MIN_ELAPSED = 0;
+            drawTimer();
+            
+            audio.play();
         }
     });
-
-    $(document).click(function(ev) {
-        z = true;
-    });
-
 }
 
 function pauseGame() { // Once spacebar is pressed...
@@ -455,3 +457,14 @@ function pauseGame() { // Once spacebar is pressed...
 }
 
 window.onload = init;
+
+
+//BUGS TO FIX:
+/*
+-x-Character moving while paused
+---Retry area still clickable after restarting
+-x-Timer keeps running if you pause after restarting the second time
+-x-Canvas < Window, moves when mouse up or down
+-x-Restarting sometimes when hovered over, not clicked
+-x-Cursor problems
+*/
