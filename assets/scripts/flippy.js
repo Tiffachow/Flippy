@@ -3,23 +3,24 @@ var WebFont, audio, loseAudio;
 // Canvas variables
 var canvas,
     flippyCtx;
-var position = {
-    x: 0, 
-    y: 0, 
-    cat_x: 0};
-var view = {
-  left_x: 0,
-  right_x: 0
-};
 
 // Render function variables
-var ACCELERATION = 60;
 var BASE_POS = 500;
 var UP_OBST_POS = 400;
 var DWN_OBST_POS = 600;
 var NUM_OF_ELEMS = -20;
+var ACCELERATION = 60;
+var position = {
+    y: 0,
+    cat_x: 0
+};
+var view = {
+    left_x: 0,
+    right_x: 0
+};
 var positionHistory = [];
 var lastElems = [];
+var renderTimeout;
 
 // Timer function variables
 var MS_ELAPSED = 0;
@@ -28,6 +29,7 @@ var SEC_RESET_COUNTER = 0;
 var SEC_ELAPSED = 0;
 var SEC_COUNTER = 0;
 var MIN_ELAPSED = 0;
+var timerTimeout;
 
 // Character object variables
 var charImg = new Image();
@@ -44,12 +46,16 @@ var upKeydown = false;
 var downKeydown = false;
 var lastKeydown = "up";
 
+// Pause variable
+var isRunning;
+
+// Retry variables
 var overLink = false;
 var RETRY_X;
-var RETRY_Y = 680;
+var RETRY_Y = 660;
 var RETRY_WIDTH;
 var RETRY_HEIGHT = 120;
-var x = null, 
+var x = null,
     y = null;
 var z = false;
 
@@ -60,44 +66,38 @@ function init() {
     canvas = document.getElementById('canvas');
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
-    
+
     // Get the audio clips
     audio = document.getElementsByTagName("audio")[0];
     loseAudio = document.getElementsByTagName("audio")[1];
-    
+
     // Set the position
-    position.x = canvas.width;
+    view.right_x = canvas.width;
     position.y = BASE_POS;
-    position.cat_x = canvas.width/2;
-    view.right_x = position.x;
-    
+    position.cat_x = canvas.width / 2;
+
     // Retrieve the context
-    if (canvas.getContext){
+    if (canvas.getContext) {
         flippyCtx = canvas.getContext("2d");
     }
-    
-    // Set variables to listen for up and down keypresses
-    $(document).keydown(function(event) {
-        if(event.keyCode == 38) {
-            upKeydown = true;
-        }
-        else if(event.keyCode == 40) {
-            downKeydown = true;
-        }    
-    });
 
-    $(document).mousemove(function(event) {
-        // Get the mouse position relative to the canvas element.
-        if (event.layerX || event.layerX === 0) { //for firefox
-            x = event.layerX;
-            y = event.layerY;
+    // Set variables to listen for up, down and spacebar keypresses
+    $(document).keydown(function(event) {
+        switch (event.keyCode) {
+            case 38:
+                upKeydown = true;
+                break;
+            case 40:
+                downKeydown = true;
+                break;
+            // Set spacebar to pause and resume game
+            case 32:
+                pauseGame();
+                break;
         }
-    }); 
-        
-    $(document).click(function(ev) {
-        z = true;
     });
     
+
     // Load font
     WebFont.load({
         google: {
@@ -111,14 +111,10 @@ function init() {
     });
 }
 
-function savePosition() {
-    positionHistory.push({x: position.x, y: position.y});
-}
-
 function render() {
 
-    flippyCtx.clearRect(0,380,canvas.width,canvas.height);
-    
+    flippyCtx.clearRect(0, 380, canvas.width, canvas.height);
+
     // Redraw all the previous lines
     if (positionHistory.length > 0) {
         flippyCtx.beginPath();
@@ -139,43 +135,40 @@ function render() {
         flippyCtx.stroke();
         flippyCtx.closePath();
     }
-    
-    
+
     // Create character
     $(charImg, charImgR).onload = createChar();
-    
+
     // Move to start, save the position
     flippyCtx.beginPath();
-    moveLine(position.x, position.y);
+    moveLine(view.right_x, position.y);
     savePosition();
-    
+
     // Move to new position and new view and save the position
     if (ACCELERATION > 30) {
-        position.x += 10;
         view.left_x += 10;
         view.right_x += 10;
         position.cat_x += 10;
     }
-    else{
-        position.x += 5;
+    else {
         view.left_x += 5;
         view.right_x += 5;
         position.cat_x += 5;
     }
-    
-    drawLine(position.x, position.y);
+
+    drawLine(view.right_x, position.y);
     savePosition();
-    
+
     // Use random number to determine when and where "obstacles" appear
     var randomNum = Math.random();
-    
+
     // Decrease gap between up & down obstacles once frame rate is below 30ms
     /*
     if (ACCELERATION <= 30) {
         NUM_OF_ELEMS = -20;
     }
     */
-    
+
     // Copy the last few positions into a new array lastElems
     lastElems = positionHistory.slice(NUM_OF_ELEMS);
     if (randomNum >= 0 && randomNum < 0.1) {
@@ -190,38 +183,49 @@ function render() {
             position.y = DWN_OBST_POS;
         }
     }
-    
+
     // Move to new up/down obstacle position (or just to the right / no obstacle) and save position
-    drawLine(position.x, position.y);
+    drawLine(view.right_x, position.y);
     savePosition();
-    
+
     // Move back to baseline position
     position.y = BASE_POS;
-    drawLine(position.x, position.y);
-    
+    drawLine(view.right_x, position.y);
+
     //Exclude out of view positions from being saved
     while (positionHistory[1].x < view.left_x) {
         positionHistory.shift();
     }
-    
+
     // Set timeout to a gradually increasing frame rate until it hits 20ms
     if (ACCELERATION > 20) {
         ACCELERATION -= 0.01;
     }
-    var renderTimeout = setTimeout(render, ACCELERATION);
-    
+    renderTimeout = setTimeout(render, ACCELERATION);
+    isRunning = true;
+
+
     if (intersectsChar() === true) {
         clearTimeout(renderTimeout);
+        isRunning = false;
         loadGameOver();
     }
-    
+
+}
+
+// Save all new progressions to a history we can redraw later
+function savePosition() {
+    positionHistory.push({
+        x: view.right_x,
+        y: position.y
+    });
 }
 
 // Set view to follow line's progression
 function drawLine(x, y) {
-    // position.x - view.left_x
+    // view.right_x - view.left_x
     x -= view.left_x;
-   
+
     // Draw the line
     flippyCtx.lineTo(x, y);
 }
@@ -239,16 +243,16 @@ function drawCat(x, y, z) {
 }
 
 // Test if any of the array's elements (y position) indicate an up obstacle
-function hasUpObst(element, index, array){
+function hasUpObst(element, index, array) {
     return element.y == UP_OBST_POS;
 }
 
 // Test if any of the array's elements (y position) indicate a down obstacle
-function hasDwnObst(element, index, array){
+function hasDwnObst(element, index, array) {
     return element.y == DWN_OBST_POS;
 }
 
-
+// Draw Flippy game title
 function drawName() {
     flippyCtx.font = "400 150px Indie Flower";
     flippyCtx.fillStyle = "#00c6ff";
@@ -261,30 +265,40 @@ function drawName() {
 function drawTimer() {
     var timerWidth = canvas.width / 2 - 50;
     var timerHeight = 350;
-    flippyCtx.clearRect(0,320,canvas.width,40);
+    flippyCtx.clearRect(0, 320, canvas.width, 40);
+    // Start keeping track of ms passed, add 1 ms progression for each run of drawTimer. This counter won't restart.
     MS_ELAPSED += 1;
-    if (MS_RESET_COUNTER == 100){
+    // If 100ms have passed, restart the ms counter that will be displayed
+    if (MS_RESET_COUNTER == 100) {
         MS_RESET_COUNTER = 0;
     }
+    // The ms counter that restarts every 100ms will also progress 1 ms every run
     MS_RESET_COUNTER += 1;
-    if (SEC_RESET_COUNTER == 6000){
+    // If 6000ms have passed, restart the sec counter that will be displayed
+    if (SEC_RESET_COUNTER == 6000) {
         SEC_RESET_COUNTER = 0;
     }
+    // The sec counter that restarts every 6000ms will also progress 1ms every run
     SEC_RESET_COUNTER += 1;
+    // Logic for calculating how many ms = sec = min
     SEC_ELAPSED = MS_ELAPSED / 100;
     SEC_COUNTER = Math.floor(SEC_RESET_COUNTER / 100);
     MIN_ELAPSED = Math.floor(SEC_ELAPSED / 60);
+    // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
     flippyCtx.font = "400 40px Indie Flower";
     flippyCtx.fillStyle = "#000";
-    flippyCtx.fillText(MIN_ELAPSED + " m",timerWidth - 100,timerHeight);
-    flippyCtx.fillText(SEC_COUNTER + " s",timerWidth,timerHeight);
-    flippyCtx.fillText(MS_RESET_COUNTER,timerWidth + 100,timerHeight);
-    flippyCtx.fillText("ms",timerWidth + 150,timerHeight); 
-    var timerTimeout = setTimeout(drawTimer, 1);
-    timerTimeout;
+    flippyCtx.fillText(MIN_ELAPSED + " m", timerWidth - 100, timerHeight);
+    flippyCtx.fillText(SEC_COUNTER + " s", timerWidth, timerHeight);
+    flippyCtx.fillText(MS_RESET_COUNTER, timerWidth + 100, timerHeight);
+    flippyCtx.fillText("ms", timerWidth + 150, timerHeight);
+    // Run this function every ms
+    timerTimeout = setTimeout(drawTimer, 1);
+
+    // If game has ended, stop the timer
     if (intersectsChar() === true) {
         clearTimeout(timerTimeout);
     }
+
 }
 
 function createChar() {
@@ -304,7 +318,7 @@ function createChar() {
         // Reset keydown event listener variable
         downKeydown = false;
     }
-    
+
     // If no key was pressed, maintain last position of img
     else {
         // If img was previously in the up position, draw img in up position
@@ -312,7 +326,7 @@ function createChar() {
             drawCat(charImg, position.cat_x, 472);
         }
         // If img was previously in the down position, draw img in down position
-        else if (lastKeydown  == "down") {
+        else if (lastKeydown == "down") {
             drawCat(charImgR, position.cat_x, 497);
         }
     }
@@ -348,34 +362,96 @@ function loadGameOver() {
     RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 + 30;
     flippyCtx.font = "400 80px Indie Flower";
     flippyCtx.fillStyle = "#000";
-    flippyCtx.fillText("Retry?",RETRY_X,RETRY_Y);
+    flippyCtx.fillText("Retry?", RETRY_X, RETRY_Y);
     // Cue Flippy Lose audio clip
     loseAudio.play();
-    
-    if (x !== null && y !== null) {
-        x-=canvas.offsetLeft;
-        y-=canvas.offsetTop;
-        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2;
-        RETRY_WIDTH = flippyCtx.measureText("Retry?").width;
-    
-        //is the mouse over the link?
-        if(x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= RETRY_Y && y >= (RETRY_Y - RETRY_HEIGHT)){
-            document.body.style.cursor = "pointer";
-            overLink = true;
+
+    $(document).mousemove(function(event) {
+        // Get the mouse position relative to the canvas element.
+        if (event.pageX) {
+            x = event.pageX;
+            y = event.pageY;
         }
-        else{
-            document.body.style.cursor = "";
-            overLink = false;
+
+        if (x !== null && y !== null) {
+            RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 40;
+            RETRY_WIDTH = flippyCtx.measureText("Retry?").width * 2;
+            RETRY_Y = 660 + 40;
+
+            //is the mouse over the link?
+            if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT)) {
+                document.body.style.cursor = "pointer";
+                overLink = true;
+            }
+            else {
+                document.body.style.cursor = "";
+                overLink = false;
+            }
         }
-    }
-    
-    if (overLink) {
-        if (z) {
-            alert("AHHHHHH");
-            z = false;
+
+        if (overLink) {
+            // If the retry link has been clicked, restart the game, not resume it
+            if (z) { // Reset render()'s variables to its initial values and run render
+                
+                ACCELERATION = 60;
+                
+                // Reset the line position and view position
+                position = {
+                    y: BASE_POS,
+                    cat_x: canvas.width / 2
+                };
+                view = {
+                    left_x: 0,
+                    right_x: canvas.width
+                };
+                
+                // Clear the history arrays
+                positionHistory.length = 0;
+                lastElems.length = 0;
+                
+                // Reset the character to default position
+                upKeydown = false;
+                downKeydown = false;
+                lastKeydown = "up";
+                
+                // Run the game!
+                render();
+                
+                // Reset the timer to its initial conditions and run it from the start!
+                MS_ELAPSED = 0;
+                MS_RESET_COUNTER = 0;
+                SEC_ELAPSED = 0;
+                SEC_RESET_COUNTER = 0;
+                MIN_ELAPSED = 0;
+                drawTimer();
+                
+                // Reset the variable that checks whether the retry link has been clicked
+                z = false;
+            }
+        }
+    });
+
+    $(document).click(function(ev) {
+        z = true;
+    });
+
+}
+
+function pauseGame() { // Once spacebar is pressed...
+    // Check if game is over
+    if (intersectsChar() === false) {
+        // Check if game is paused
+        if (isRunning) { // If game is running, pause it
+            clearTimeout(renderTimeout);
+            clearTimeout(timerTimeout);
+            isRunning = false;
+        }
+        else { // Otherwise, game is paused, so run it
+            render(); 
+            drawTimer();
+            isRunning = true;
         }
     }
 }
-
 
 window.onload = init;
