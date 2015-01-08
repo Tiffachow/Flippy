@@ -51,7 +51,6 @@ var endPauseTime;
 var pauseDuration = 0;
 var endTime;
 var paused = false;
-var timerTimeout;
 
 //Background image objects, spritesheet
 var background = new Image();
@@ -63,6 +62,9 @@ moon.src = "/assets/images/flippy/moon.png";
 var cloud = new Image();
 cloud.src = "/assets/images/flippy/cloud.png";
 var cloudPos = [];
+var cloudXPathArea,
+    cloudYPathArea;
+var isReverse = [false, false, false, false];
 
 // Character object variables
 var charImg = new Image();
@@ -128,16 +130,23 @@ function init() {
         background: 0
     };
     // Set initial random positions of clouds
-    cloudPos[2] = {
-        a: (canvas.height - cloud.height) * Math.random(),
-        b: (canvas.height - cloud.height) * Math.random(),
-        c: (canvas.height - cloud.height) * Math.random(),
-        d: (canvas.height - cloud.height) * Math.random(),
-        e: (canvas.width - cloud.width) * Math.random(),
-        f: (canvas.width - cloud.width) * Math.random(),
-        g: (canvas.width - cloud.width) * Math.random(),
-        h: (canvas.width - cloud.width) * Math.random()
-    };
+    cloudXPathArea = canvas.width - cloud.width;
+    cloudYPathArea = canvas.height - cloud.height;
+    cloudPos[0] = [ // Cloud x coords
+        cloudXPathArea * Math.random(),
+        cloudXPathArea * Math.random(),
+        cloudXPathArea * Math.random(),
+        cloudXPathArea * Math.random()
+    ];
+    
+    cloudPos[1] = [ // Cloud y coords
+        cloudYPathArea * Math.random(),
+        cloudYPathArea * Math.random(),
+        cloudYPathArea * Math.random(),
+        cloudYPathArea * Math.random()
+        ];
+        
+    cloudPos[3] = [cloudPos[1][0], cloudPos[1][1], cloudPos[1][2], cloudPos[1][3]];
 
     // Retrieve the context
     if (canvas.getContext) {
@@ -152,7 +161,7 @@ function init() {
                 enterKeydown.push(true);
                 if (isGameBegin) {
                     if (enterKeydown[1]) {
-                        text = "AHHH One moment flippy was munching happily on his paw, the next, he was in this crazy world??? Help flippy avoid the mystery walls! ---ENTER to continue.";
+                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place??? Help flippy avoid the mystery walls! ---ENTER to continue.";
                         wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
                     }
                     if (enterKeydown[2]) {
@@ -175,7 +184,6 @@ function init() {
                         // start game timer
                         startTime = new Date();
                         render();
-                        drawTimer();
                         enterKeydown.length = 0;
                     }
                 }
@@ -309,8 +317,9 @@ function render() {
     isGameBegin = false;
 
     // Clear canvas every render
-    flippyCtx.clearRect(0, 0, canvas.width, 320);
-    flippyCtx.clearRect(0, 360, canvas.width, canvas.height - 360);
+    flippyCtx.clearRect(0, 0, canvas.width, canvas.height);
+    //flippyCtx.clearRect(0, 0, canvas.width, 320);
+    //flippyCtx.clearRect(0, 360, canvas.width, canvas.height - 360);
 
     // If view reaches end of our background image
     if (position.background < -3000) {
@@ -318,20 +327,14 @@ function render() {
     }
     drawSpace(position.background);
     drawClouds(
-        cloudPos[2].e, cloudPos[2].f, cloudPos[2].g, cloudPos[2].h, // Clouds x positions
-        cloudPos[2].a, cloudPos[2].b, cloudPos[2].c, cloudPos[2].d, // Clouds y positions
-        cloud.width, cloud.height
-        );
+        cloudPos[0][0], cloudPos[0][1], cloudPos[0][2], cloudPos[0][3], 
+        cloud.width, cloud.height);
     // drawSun();
     // drawMoon();
     drawName();
     drawControls();
 
     // Redraw all the previous lines
-    flippyCtx.shadowOffsetX = 0;
-    flippyCtx.shadowOffsetY = 0;
-    flippyCtx.shadowBlur = 20;
-    flippyCtx.shadowColor = "rgba(0,0,0,0.7)";
     if (positionHistory.length > 0) {
         flippyCtx.beginPath();
         moveLine(positionHistory[0].x, positionHistory[0].y);
@@ -365,19 +368,19 @@ function render() {
         view.left_x += 10;
         view.right_x += 10;
         position.cat_x += 10;
-        cloudPos[2].e += 10;
-        cloudPos[2].f += 10;
-        cloudPos[2].g += 10;
-        cloudPos[2].h += 10;
+        cloudPos[0][0] += 10;
+        cloudPos[0][1] += 10;
+        cloudPos[0][2] += 10;
+        cloudPos[0][3] += 10;
     }
     else {
         view.left_x += 5;
         view.right_x += 5;
         position.cat_x += 5;
-        cloudPos[2].e += 5;
-        cloudPos[2].f += 5;
-        cloudPos[2].g += 5;
-        cloudPos[2].h += 5;
+        cloudPos[0][0] += 5;
+        cloudPos[0][1] += 5;
+        cloudPos[0][2] += 5;
+        cloudPos[0][3] += 5;
     }
 
     drawLine(view.right_x, position.y);
@@ -420,6 +423,8 @@ function render() {
     while (positionHistory[1].x < view.left_x) {
         positionHistory.shift();
     }
+    
+    drawTimer();
 
     // Set timeout to a gradually increasing frame rate until it hits 20ms
     if (ACCELERATION > 20) {
@@ -499,42 +504,39 @@ function drawSpace(x) {
 }
 
 // Draw clouds in background
-function drawClouds(x1, x2, x3, x4, y1, y2, y3, y4, w, h) {
-    x1 -= view.left_x;
-    x2 -= view.left_x;
-    x3 -= view.left_x;
-    x4 -= view.left_x;
-    cloudPos[0] = {0:x1, 1:x2, 2:x3, 3:x4};
-    cloudPos[1] = {0:y1, 1:y2, 2:y3, 3:y4};
-    // for (var i = 0; i <= 3; i++) {
+function drawClouds(x1, x2, x3, x4, w, h) {
+
+    cloudPos[2] = [x1, x2, x3, x4]; // temporary cloud x coords
+ 
+    for (var i = 0; i < 4; i++) {
+        // Keep clouds moving horizontally within the view of the game
+        cloudPos[2][i] -= view.left_x;
+        
+        // Record when clouds hit the L/R view borders
+        if (cloudPos[0][i] >= (view.right_x - cloud.width)) {
+            isReverse[i] = true;
+        }
+        else if (cloudPos[0][i] <= view.left_x) {
+            isReverse[i] = false;
+        }
+        
+        // Reverse the direction clouds move in when they hit the L/R view borders
+        if (isReverse[i]) {
+            cloudPos[0][i] -= 2;
+        }
+        else if (!isReverse[i]) {
+            cloudPos[0][i] += 1;
+        }
+        
+        if (cloudPos[3][i] < (cloudPos[1][i] + 10)) {
+            cloudPos[3][i] + 1;
+        }
+        else if (cloudPos[3][i] >= (cloudPos[1][i] + 10)) {
+            cloudPos[3][i] - 1;
+        }
+        
+    }
     
-    //     cloudPos[1].i 
-    // }
-    //     // If cloud isn't at end of view horizontally, move towards right, otherwise move left
-    //     if (cloudPos[0].i < view.right_x) {
-    //         if (Math.random() > 0.5) {
-    //             cloudPos[0].i += 5;
-    //         }
-    //         else {
-    //             cloudPos[0].i -= 5;
-    //         }
-    //     }
-    //     else {
-    //         cloudPos[0].i -= 5;
-    //     }
-    //     // If cloud isn't at end of view vertically, move down, otherwise move up
-    //     if (cloudPos[1].i < canvas.height) {
-    //         if (Math.random() > 0.5) {
-    //             cloudPos[1].i += 5;
-    //         }
-    //         else {
-    //             cloudPos[1].i -= 5;
-    //         }
-    //     }
-    //     else {
-    //         cloudPos[1].i -= 5;
-    //     }
-    // }
     //var // ran1 = Math.random(),
         // ran2 = Math.random(),
         // ran3 = Math.random(),
@@ -547,10 +549,10 @@ function drawClouds(x1, x2, x3, x4, y1, y2, y3, y4, w, h) {
         // h2 += h * ran2,
         // h3 += h * ran3,
         // h4 += h * ran4;
-    flippyCtx.drawImage(cloud, cloudPos[0][0], cloudPos[1][0], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[0][1], cloudPos[1][1], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[0][2], cloudPos[1][2], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[0][3], cloudPos[1][3], w, h);
+    flippyCtx.drawImage(cloud, cloudPos[2][0], cloudPos[3][0], w, h);
+    flippyCtx.drawImage(cloud, cloudPos[2][1], cloudPos[3][1], w, h);
+    flippyCtx.drawImage(cloud, cloudPos[2][2], cloudPos[3][2], w, h);
+    flippyCtx.drawImage(cloud, cloudPos[2][3], cloudPos[3][3], w, h);
 }
 
 // Draw moon in background
@@ -589,22 +591,10 @@ function drawTimer() {
     // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
     flippyCtx.font = "400 40px Indie Flower";
     flippyCtx.fillStyle = "#fff";
-    flippyCtx.shadowOffsetX = 0;
-    flippyCtx.shadowOffsetY = 0;
-    flippyCtx.shadowBlur = 20;
-    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
     flippyCtx.fillText(minElapsed + " m", timerWidth - 100, timerHeight);
     flippyCtx.fillText(secCounter + " s", timerWidth, timerHeight);
     flippyCtx.fillText(msCounter, timerWidth + 90, timerHeight);
     flippyCtx.fillText("ms", timerWidth + 150, timerHeight);
-    // Run this function every ms
-    timerTimeout = setTimeout(drawTimer, 60);
-
-    // If game has ended, stop the timer
-    if (intersectsChar() === true) {
-        clearTimeout(timerTimeout);
-    }
-
 }
 
 function createChar() {
@@ -714,7 +704,6 @@ function loadRetry() {
             // Allow player to RETRY by:
             // Reset render()'s variables to its initial values and run render
             
-            clearTimeout(timerTimeout);
             clearTimeout(renderTimeout);
             ACCELERATION = 60;
             
@@ -731,16 +720,20 @@ function loadRetry() {
             };
             
             // Reset the clouds positions
-            cloudPos[2] = {
-                a: (canvas.height - cloud.height) * Math.random(),
-                b: (canvas.height - cloud.height) * Math.random(),
-                c: (canvas.height - cloud.height) * Math.random(),
-                d: (canvas.height - cloud.height) * Math.random(),
-                e: (canvas.width - cloud.width) * Math.random(),
-                f: (canvas.width - cloud.width) * Math.random(),
-                g: (canvas.width - cloud.width) * Math.random(),
-                h: (canvas.width - cloud.width) * Math.random()
-            };
+            cloudPos[0] = [ // Cloud x coords
+                cloudXPathArea * Math.random(),
+                cloudXPathArea * Math.random(),
+                cloudXPathArea * Math.random(),
+                cloudXPathArea * Math.random()
+            ];
+            cloudPos[1] = [ // Cloud y coords
+                cloudYPathArea * Math.random(),
+                cloudYPathArea * Math.random(),
+                cloudYPathArea * Math.random(),
+                cloudYPathArea * Math.random()
+                ];
+                
+            isReverse = [false, false, false, false];
             
             // Clear the history arrays
             positionHistory.length = 0;
@@ -752,12 +745,10 @@ function loadRetry() {
             lastKeydown = "up";
             
             // Run the game!
+            startTime = new Date();
             render();
             
             // Reset the timer to its initial conditions and run it from the start!
-            startTime = new Date();
-            drawTimer();
-            
             beginAudio.play();
         }
     });
@@ -771,14 +762,12 @@ function pauseGame() { // Once spacebar is pressed...
             pauseDuration = 0;
             paused = true;
             clearTimeout(renderTimeout);
-            clearTimeout(timerTimeout);
             startPauseTime = new Date();
             isRunning = false;
         } 
         else { // Otherwise, game is paused, so run it
-            render(); 
             endPauseTime = new Date();
-            drawTimer();
+            render();
             isRunning = true;
             paused = false;
         }
@@ -790,17 +779,17 @@ window.onload = init;
 
 //TODO:
 /*
--x-Fix bug: Retry area still clickable after restarting
 ---Write calibrate function
 ---Add audio capabilities
 -x-Add background, 
     ---make background loop
 -x-Add clouds, 
-    ---make them move around
+    -x-make them move around
 ---Add sun and moon
 ---Add loading screen
 ---Add admin override function
--x-Prettify instructions and game objects
----Fix bug: timer disappears when game is paused
--x-Revise timer to use Date() objects
+-x-Fix bug: timer disappears when game is paused
+---Start timer when obstacle course reaches flippy
+---Add Fork Me banner
+---Add share buttons at retry screen (maybe)
 */
