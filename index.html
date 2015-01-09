@@ -15,13 +15,9 @@ Sun, moon and clouds are free vectors from dryicons.com and vecteezy.com:
   <meta charset="utf-8" />
 
   <!-- STYLES -->
-  <link rel="stylesheet" href="assets/stylesheets/css/flippy/reset.css" type="text/css" media="all" />
+  <link rel="stylesheet" href="assets/stylesheets/css/flippy/reset.css" type="text/css" media="all">
+  <link rel="stylesheet" href="assets/stylesheets/css/flippy/main.css" type="text/css" media="all">
   <link href="https://fonts.googleapis.com/css?family=Indie+Flower" rel="stylesheet" type="text/css">
-  <style type="text/css" media="screen">
-    * { margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; }
-    canvas { display: block; }
-  </style>
 
   <!-- SCRIPTS -->
 
@@ -34,6 +30,10 @@ Sun, moon and clouds are free vectors from dryicons.com and vecteezy.com:
 <body>
   <audio src="assets/audio/flippy.mp3"></audio>
   <audio src="assets/audio/flippy_lose.mp3"></audio>
+  <div id="load_screen">
+    <div id="load_text">Flippy Loading</div>
+    <div id="load_cat"><img src="assets/images/flippy/cat.png"></div>
+  </div>
   <canvas id='canvas'>
     <img id="fallback" src="assets/images/flippy/cat.png">
   </canvas>

@@ -1,4 +1,6 @@
 var WebFont, beginAudio, loseAudio, audioCtx;
+var float = [false, false, false, false, false];
+var secret = null;
 
 // Canvas variables
 var canvas,
@@ -14,8 +16,6 @@ var source,
 // Start Game variables
 var isGameBegin;
 var enterKeydown = [];
-enterKeydown.length = 1;
-enterKeydown[0] = false;
 
 // wrapText Variables
 var maxWidth;
@@ -45,6 +45,7 @@ var lastElems = [];
 var renderTimeout;
 
 // Timer function variables
+var reachPath = false;
 var startTime;
 var startPauseTime;
 var endPauseTime;
@@ -62,6 +63,8 @@ moon.src = "/assets/images/flippy/moon.png";
 var cloud = new Image();
 cloud.src = "/assets/images/flippy/cloud.png";
 var cloudPos = [];
+var cloudSize = [];
+var sizeRan = [];
 var cloudXPathArea,
     cloudYPathArea;
 var isReverse = [false, false, false, false];
@@ -94,6 +97,7 @@ var x = null,
     y = null;
 
 
+var DEBUG = true;
 
 function init() {
     // Make the canvas fullscreen
@@ -144,9 +148,35 @@ function init() {
         cloudYPathArea * Math.random(),
         cloudYPathArea * Math.random(),
         cloudYPathArea * Math.random()
-        ];
+    ];
         
-    cloudPos[3] = [cloudPos[1][0], cloudPos[1][1], cloudPos[1][2], cloudPos[1][3]];
+    cloudPos[3] = [
+        cloudPos[1][0], 
+        cloudPos[1][1], 
+        cloudPos[1][2], 
+        cloudPos[1][3]
+    ];
+    
+    sizeRan = [
+        Math.random() + 0.3,
+        Math.random() + 0.3,
+        Math.random() + 0.3,
+        Math.random() + 0.3
+    ];
+    
+    cloudSize[0] = [ // Cloud width
+        cloud.width * sizeRan[0], 
+        cloud.width * sizeRan[1], 
+        cloud.width * sizeRan[2], 
+        cloud.width * sizeRan[3]
+    ]; 
+    
+    cloudSize[1] = [ // Cloud height
+        cloud.height * sizeRan[0], 
+        cloud.height * sizeRan[1], 
+        cloud.height * sizeRan[2], 
+        cloud.height * sizeRan[3]
+    ]; 
 
     // Retrieve the context
     if (canvas.getContext) {
@@ -160,31 +190,35 @@ function init() {
             case 13:
                 enterKeydown.push(true);
                 if (isGameBegin) {
-                    if (enterKeydown[1]) {
-                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place??? Help flippy avoid the mystery walls! ---ENTER to continue.";
+                    if (enterKeydown[0]) {
+                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER to continue.";
                         wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[0] = false;
+                    }
+                    if (enterKeydown[1]) {
+                        text = "Calibration Time!";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[1] = false;
                     }
                     if (enterKeydown[2]) {
-                        text = "                                                                                     Calibration Time!";
+                        text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
                         wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[2] = false;
                     }
                     if (enterKeydown[3]) {
-                        text = "Make a sound at the pitch you would like to be the default. Not too high or too low!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        calibrate();
+                        enterKeydown[3] = false;
                     }
                     if (enterKeydown[4]) {
-                        calibrate();
+                        flippyCtx.font = "400 50px Indie Flower";
+                        text = "Get Ready...    ENTER to START!";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[4] = false;
                     }
                     if (enterKeydown[5]) {
-                        flippyCtx.font = "400 50px Indie Flower";
-                        text = "      Get Ready...                                 ENTER to START!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                    }
-                    if (enterKeydown[6]) {
-                        // start game timer
-                        startTime = new Date();
+                        // start game
                         render();
-                        enterKeydown.length = 0;
+                        enterKeydown[5] = false;
                     }
                 }
                 break;
@@ -199,6 +233,47 @@ function init() {
             case 32:
                 pauseGame();
                 break;
+            // Secret
+            case 70:
+                if (float[0] === false) { 
+                    float[0] = true;
+                }
+                else {
+                    float[0] = false;
+                }
+                break;
+            case 76:
+                if (float[1] === false) { 
+                    float[1] = true;
+                }
+                else {
+                    float[1] = false;
+                }
+                break;
+            case 79:
+                if (float[2] === false) { 
+                    float[2] = true;
+                }
+                else {
+                    float[2] = false;
+                }
+                break;
+            case 65:
+                if (float[3] === false) { 
+                    float[3] = true;
+                }
+                else {
+                    float[3] = false;
+                }
+                break;
+            case 84:
+                if (float[4] === false) { 
+                    float[4] = true;
+                }
+                else {
+                    float[4] = false;
+                }
+                break;
         }
     });
     
@@ -209,19 +284,19 @@ function init() {
             families: ['Indie Flower']
         },
         active: function() {
-            flippyCtx.drawImage(background, 0, 0, background.width, background.height);
-            drawName();
-            // Play flippy beginning audio clip
-            beginAudio.play();
+            flippyCtx.drawImage(background, 0, 0, background.width, background.height); // Draw stationary bg for startup instructions screen
+            drawName(); // Draw name of game once for startup instructions screen
+            beginAudio.play(); // Play flippy beginning audio clip
             startGame();
         }
     });
 }
 
+// Wrap text to get paragraph form
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
     flippyCtx.fillStyle = "#00c6ff";
-    flippyCtx.clearRect(startX-10,350,maxWidth,3*lineHeight);
-    flippyCtx.fillRect(startX-10,350,maxWidth,3*lineHeight);
+    flippyCtx.clearRect(startX - 10,350,maxWidth + 10,4*lineHeight);
+    flippyCtx.fillRect(startX - 10,350,maxWidth + 10,4*lineHeight);
     var words = text.split(' ');
     var line = '';
     
@@ -242,6 +317,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     context.fillText(line, x, y);
     }
 
+// Start the first instructions and set initial properties
 function startGame() {
     isGameBegin = true;
     flippyCtx.font = "100 20px Indie Flower";
@@ -254,7 +330,7 @@ function startGame() {
     lineHeight = 65;
     startX = canvas.width / 2 - canvas.width / 6 + 15;
     startY = 400;
-    text = "CONTROLS: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause. Alternatives: UP and DOWN keys to flip. ---ENTER to continue.";
+    text = "CONTROLS: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER to continue.";
     wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
 }
 
@@ -266,9 +342,7 @@ function calibrate() {
                               navigator.msGetUserMedia);
     
     
-    // getUserMedia block - grab audio stream
-    // put it into a MediaStreamAudioSourceNode
-    // connect stream to analysern
+    // getUserMedia block - grab audio stream, put it into a MediaStreamAudioSourceNode, connect stream to analyser
     if (navigator.getUserMedia) {
         navigator.getUserMedia (
             
@@ -313,24 +387,25 @@ function flipCharWithStream() {
 }
 
 function render() {
-    // Stop enter keydown from triggering instructions
-    isGameBegin = false;
+    
+    isGameBegin = false; // Stop enter keydown from triggering instructions
 
-    // Clear canvas every render
-    flippyCtx.clearRect(0, 0, canvas.width, canvas.height);
-    //flippyCtx.clearRect(0, 0, canvas.width, 320);
-    //flippyCtx.clearRect(0, 360, canvas.width, canvas.height - 360);
+    flippyCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas every render
 
-    // If view reaches end of our background image
+    //TODO: If view reaches end of our background image, loop bg
     if (position.background < -3000) {
         position.background = 3000;
     }
+    
     drawSpace(position.background);
     drawClouds(
-        cloudPos[0][0], cloudPos[0][1], cloudPos[0][2], cloudPos[0][3], 
-        cloud.width, cloud.height);
-    // drawSun();
-    // drawMoon();
+        cloudPos[0][0], 
+        cloudPos[0][1], 
+        cloudPos[0][2], 
+        cloudPos[0][3]
+    );
+    //TODO: drawSun();
+    //TODO: drawMoon();
     drawName();
     drawControls();
 
@@ -341,29 +416,20 @@ function render() {
         for (var i = 1; i < positionHistory.length; i++) {
             drawLine(positionHistory[i].x, positionHistory[i].y);
         }
-        /*
-        if (positionHistoryY == UP_OBST_POS){
-            flippyCtx.strokeStyle = "#b6fbff";
-        }
-        else if (positionHistoryY == DWN_OBST_POS){
-            flippyCtx.strokeStyle = "#0072ff";
-        }
-        */
         flippyCtx.strokeStyle = "#00c6ff";
         flippyCtx.lineWidth = 5;
         flippyCtx.stroke();
         flippyCtx.closePath();
     }
 
-    // Create character
-    $(charImg, charImgR).onload = createChar();
+    $(charImg, charImgR).onload = createChar(); // Create character
 
     // Move to start, save the position
     flippyCtx.beginPath();
     moveLine(view.right_x, position.y);
     savePosition();
 
-    // Move to new position and new view and save the position
+    // Progress all objects consistently and based on how fast game is being rendered
     if (ACCELERATION > 30) {
         view.left_x += 10;
         view.right_x += 10;
@@ -383,39 +449,29 @@ function render() {
         cloudPos[0][3] += 5;
     }
 
-    drawLine(view.right_x, position.y);
-    savePosition();
+    drawLine(view.right_x, position.y); // Draw the new position of the path
+    savePosition(); // Save it
 
-    // Use random number to determine when and where "obstacles" appear
-    var randomNum = Math.random();
+    var randomNum = Math.random(); // Use random number to determine when and where "obstacles" appear
 
-    // Decrease gap between up & down obstacles once frame rate is below 30ms
-    /*
-    if (ACCELERATION <= 30) {
-        NUM_OF_ELEMS = -20;
-    }
-    */
-
-    // Copy the last few positions into a new array lastElems
-    lastElems = positionHistory.slice(NUM_OF_ELEMS);
-    if (randomNum >= 0 && randomNum < 0.1) {
-        // Create up obstacle if none of the last 20 positions had a down obstacle
-        if (!lastElems.some(hasDwnObst)) {
+    lastElems = positionHistory.slice(NUM_OF_ELEMS); // Copy the last few positions into a new array lastElems
+    
+    if (randomNum >= 0 && randomNum < 0.1) { // Randomize when obstacles are created
+        if (!lastElems.some(hasDwnObst)) { // Create up obstacle if none of the last 20 positions had a down obstacle
             position.y = UP_OBST_POS;
         }
     }
     else if (randomNum >= 0.9) {
-        // Create down obstacle if none of the last 20 positions had an up obstacle
-        if (!lastElems.some(hasUpObst)) {
+        if (!lastElems.some(hasUpObst)) { // Create down obstacle if none of the last 20 positions had an up obstacle
             position.y = DWN_OBST_POS;
         }
     }
 
-    // Move to new up/down obstacle position (or just to the right / no obstacle) and save position
+    // Move to new up/down obstacle position (or just to the right / no obstacle), draw it, and save position
     drawLine(view.right_x, position.y);
     savePosition();
 
-    // Move back to baseline position
+    // Move back to baseline position and draw it
     position.y = BASE_POS;
     drawLine(view.right_x, position.y);
 
@@ -424,23 +480,50 @@ function render() {
         positionHistory.shift();
     }
     
-    drawTimer();
+    // When flippy encounters the beginning of the path, the timer starts and continues
+    if (positionHistory[0].x > position.cat_x - 10 && positionHistory[0].x < position.cat_x + 10) {
+        startTime = new Date();
+        reachPath = true;
+    }
+    if (reachPath) {
+        drawTimer();
+    }
 
     // Set timeout to a gradually increasing frame rate until it hits 20ms
     if (ACCELERATION > 20) {
         ACCELERATION -= 0.01;
     }
+    
+    // Keep running render every x ms
     renderTimeout = setTimeout(render, ACCELERATION);
     isRunning = true;
 
+    // Secret
+    if (float.every(isAllTrue)) {
+        promptSecret();
+        float = [false, false, false, false, false];
+        if (secret == "floppybird") {
+            adminOverride();
+        }
+    }
 
+    // If char hits an obstacle, trigger game over stuff
     if (intersectsChar() === true) {
+        // Stop game
         clearTimeout(renderTimeout);
+        // Reset to initial conditions of game
         isRunning = false;
+        reachPath = false; // timer ends
+        // Show game over screen
         loadGameOver();
+        // Show retry option
         loadRetry();
     }
 
+}
+
+function isAllTrue(element, index, array) {
+  return element === true;
 }
 
 // Save all new progressions to a history we can redraw later
@@ -504,7 +587,13 @@ function drawSpace(x) {
 }
 
 // Draw clouds in background
-function drawClouds(x1, x2, x3, x4, w, h) {
+function drawClouds(x1, x2, x3, x4) {
+    
+    // Set shadow of clouds to be black
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 5;
+    flippyCtx.shadowBlur = 50;
+    flippyCtx.shadowColor = "rgba(0,0,0,0.7)";
 
     cloudPos[2] = [x1, x2, x3, x4]; // temporary cloud x coords
  
@@ -513,7 +602,7 @@ function drawClouds(x1, x2, x3, x4, w, h) {
         cloudPos[2][i] -= view.left_x;
         
         // Record when clouds hit the L/R view borders
-        if (cloudPos[0][i] >= (view.right_x - cloud.width)) {
+        if (cloudPos[0][i] >= (view.right_x - cloudSize[0][i])) {
             isReverse[i] = true;
         }
         else if (cloudPos[0][i] <= view.left_x) {
@@ -528,40 +617,36 @@ function drawClouds(x1, x2, x3, x4, w, h) {
             cloudPos[0][i] += 1;
         }
         
-        if (cloudPos[3][i] < (cloudPos[1][i] + 10)) {
-            cloudPos[3][i] + 1;
-        }
-        else if (cloudPos[3][i] >= (cloudPos[1][i] + 10)) {
-            cloudPos[3][i] - 1;
-        }
-        
+        //TODO: bounce clouds up/down
+        // if (cloudPos[3][i] < (cloudPos[1][i] + 10)) {
+        //     cloudPos[3][i] + 1;
+        // }
+        // else if (cloudPos[3][i] >= (cloudPos[1][i] + 10)) {
+        //     cloudPos[3][i] - 1;
+        // }
+
     }
     
-    //var // ran1 = Math.random(),
-        // ran2 = Math.random(),
-        // ran3 = Math.random(),
-        // ran4 = Math.random(),
-        // w1 += w * ran1,
-        // w2 += w * ran2,
-        // w3 += w * ran3,
-        // w4 += w * ran4,
-        // h1 += h * ran1,
-        // h2 += h * ran2,
-        // h3 += h * ran3,
-        // h4 += h * ran4;
-    flippyCtx.drawImage(cloud, cloudPos[2][0], cloudPos[3][0], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[2][1], cloudPos[3][1], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[2][2], cloudPos[3][2], w, h);
-    flippyCtx.drawImage(cloud, cloudPos[2][3], cloudPos[3][3], w, h);
+    // Draw clouds
+    flippyCtx.drawImage(cloud, cloudPos[2][0], cloudPos[3][0], cloudSize[0][0], cloudSize[1][0]);
+    flippyCtx.drawImage(cloud, cloudPos[2][1], cloudPos[3][1], cloudSize[0][1], cloudSize[1][1]);
+    flippyCtx.drawImage(cloud, cloudPos[2][2], cloudPos[3][2], cloudSize[0][2], cloudSize[1][2]);
+    flippyCtx.drawImage(cloud, cloudPos[2][3], cloudPos[3][3], cloudSize[0][3], cloudSize[1][3]);
+    
+    // Set shadow properties back to blue
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 20;
+    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
 }
 
-// Draw moon in background
+//TODO: Draw moon in background
 function drawMoon(x, y) {
     x -= view.left_x / 4;
     flippyCtx.drawImage(moon, x, 0);
 }
 
-//Draw sun in background
+//TODO: Draw sun in background
 function drawSun(x, y) {
     x -= view.left_x / 4;
     flippyCtx.drawImage(sun, x, 0);
@@ -574,20 +659,21 @@ function drawTimer() {
     var secElapsed = 0;
     var secCounter = 0;
     var minElapsed = 0;
-    pauseDuration = endPauseTime - startPauseTime;
-    // Start keeping track of ms passed
-    endTime = new Date();
+    pauseDuration = endPauseTime - startPauseTime; // Keep track of how much time is spent being paused
+    endTime = new Date(); // Start keeping track of ms passed
+    
     if (paused) {
-        startTime.setMilliseconds(startTime.getMilliseconds() + (pauseDuration));
+        startTime.setMilliseconds(startTime.getMilliseconds() + (pauseDuration)); // If paused, add the time passed while paused to the starting time
     }
-    var msElapsed = endTime - startTime;
-    //msElapsed.paused = msElapsed.regular + pauseDuration;
+    
+    var msElapsed = endTime - startTime; // The total amount of time passed is the difference between the start and end, accounting for all the paused time
     
     // Logic for calculating how many ms = sec = min
     secElapsed = Math.floor(msElapsed / 1000);
     msCounter = msElapsed % 1000;
     minElapsed = Math.floor(secElapsed / 60);
     secCounter = secElapsed % 60;
+    
     // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
     flippyCtx.font = "400 40px Indie Flower";
     flippyCtx.fillStyle = "#fff";
@@ -681,8 +767,8 @@ function loadRetry() {
                 y = event.pageY;
             }
             
-        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 40;
-        RETRY_WIDTH = flippyCtx.measureText("Retry?").width * 2;
+        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2;
+        RETRY_WIDTH = flippyCtx.measureText("Retry?").width;
         RETRY_Y = 660 + 40;    
             
         // If mouse is over retry area and game is over:    
@@ -701,8 +787,7 @@ function loadRetry() {
         // Is the mouse over retry area  while game is over (and user has clicked)?
         if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT) && isGameOver == "yes") {
             
-            // Allow player to RETRY by:
-            // Reset render()'s variables to its initial values and run render
+            // Allow player to RETRY by resetting render()'s variables to its initial values and running render
             
             clearTimeout(renderTimeout);
             ACCELERATION = 60;
@@ -733,7 +818,28 @@ function loadRetry() {
                 cloudYPathArea * Math.random()
                 ];
                 
-            isReverse = [false, false, false, false];
+            isReverse = [false, false, false, false]; // Reset clouds movement directions
+            
+            // Reset cloud sizes
+            sizeRan = [
+                Math.random() + 0.3,
+                Math.random() + 0.3,
+                Math.random() + 0.3,
+                Math.random() + 0.3
+            ];
+            
+            cloudSize[0] = [ // Cloud width
+                cloud.width * sizeRan[0], 
+                cloud.width * sizeRan[1], 
+                cloud.width * sizeRan[2], 
+                cloud.width * sizeRan[3]
+            ]; 
+            cloudSize[1] = [ // Cloud height
+                cloud.height * sizeRan[0], 
+                cloud.height * sizeRan[1], 
+                cloud.height * sizeRan[2], 
+                cloud.height * sizeRan[3]
+            ]; 
             
             // Clear the history arrays
             positionHistory.length = 0;
@@ -745,10 +851,9 @@ function loadRetry() {
             lastKeydown = "up";
             
             // Run the game!
-            startTime = new Date();
             render();
             
-            // Reset the timer to its initial conditions and run it from the start!
+            // Cue flippy noise!
             beginAudio.play();
         }
     });
@@ -774,7 +879,22 @@ function pauseGame() { // Once spacebar is pressed...
     }
 }
 
-window.onload = init;
+function promptSecret() {
+    secret = prompt("Pssst, password please!");
+    // if (secret != null) {
+    //     float = [false, false, false, false, false];
+    // }
+}
+
+function adminOverride() {
+    alert("YOURE IN");
+}
+
+window.onload = function() {
+    var load_screen = document.getElementById("load_screen");
+	document.body.removeChild(load_screen); // Remove loading screen once everything is loaded
+	init();
+};
 
 
 //TODO:
@@ -782,14 +902,13 @@ window.onload = init;
 ---Write calibrate function
 ---Add audio capabilities
 -x-Add background, 
-    ---make background loop
--x-Add clouds, 
-    -x-make them move around
+    ---make background loop or add another bg + other bg objects
 ---Add sun and moon
----Add loading screen
+-x-Add loading screen
 ---Add admin override function
--x-Fix bug: timer disappears when game is paused
----Start timer when obstacle course reaches flippy
+-x-Start timer when obstacle course reaches flippy
 ---Add Fork Me banner
 ---Add share buttons at retry screen (maybe)
+---Make mobile compatible
+-x-Clean up commenting and old code
 */
