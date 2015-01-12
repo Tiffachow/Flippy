@@ -49,7 +49,8 @@ var position = {
 };
 var view = {
     left_x: 0,
-    right_x: 0
+    right_x: 0,
+    left_x_copy: 0
 };
 var positionHistory = [];
 var lastElems = [];
@@ -485,11 +486,6 @@ function render() {
     pitch.push = autoCorrelate(freqDataArray, audioCtx.sampleRate);
     flipCharWithStream();
     
-    //TODO: If view reaches end of our background image, loop bg
-    if (position.background < -3000) {
-        position.background = 3000;
-    }
-    
     drawSpace(position.background);
     drawSun(position.sun_x, position.sun_y, position.sun_theta);
     drawMoon(position.moon_x, position.moon_y, position.moon_theta);
@@ -525,6 +521,7 @@ function render() {
     // Progress all objects consistently and based on how fast game is being rendered
     if (ACCELERATION > 30) {
         view.left_x += 10;
+        view.left_x_copy += 10;
         view.right_x += 10;
         position.cat_x += 10;
         cloudPos[0][0] += 10;
@@ -534,6 +531,7 @@ function render() {
     }
     else {
         view.left_x += 5;
+        view.left_x_copy += 5;
         view.right_x += 5;
         position.cat_x += 5;
         cloudPos[0][0] += 5;
@@ -685,7 +683,12 @@ function drawControls() {
 
 // Draw space background
 function drawSpace(x) {
-    x -= view.left_x / 4;
+    
+    x -= view.left_x_copy / 4; // Position space based on view position
+    if (x < canvas.width - background.width) { // If reach the end of background image, ...
+        x = 0;
+        view.left_x_copy = 0;
+    }
     flippyCtx.drawImage(background, x, 0, background.width, background.height);
 }
 
@@ -931,6 +934,7 @@ function loadRetry() {
             };
             view = {
                 left_x: 0,
+                left_x_copy: 0,
                 right_x: canvas.width
             };
             
@@ -1025,11 +1029,8 @@ window.onload = function() {
 /*
 ---Write calibrate function
 ---Add audio capabilities
--x-Add background, 
-    ---make background loop or add another bg + other bg objects
--x-Add sun and moon
--x-Add admin override / cheat code functionality 
----Add Fork Me banner
+-x-make background loop or add another bg + other bg objects
+-x-Add Fork Me banner
 ---Add share buttons at retry screen (maybe)
 ---Make mobile compatible
 */
