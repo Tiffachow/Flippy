@@ -1,6 +1,9 @@
 var WebFont, beginAudio, loseAudio, audioCtx;
+
+// Secret
 var float = [false, false, false, false, false];
 var secret = null;
+var adminOverride = false;
 
 // Canvas variables
 var canvas,
@@ -11,6 +14,8 @@ var source,
     analyser,
     bufferLength,
     freqDataArray,
+    MIN_SAMPLES,
+    pitch = [],
     pitchCenter;
 
 // Start Game variables
@@ -34,7 +39,13 @@ var position = {
     y: 0,
     cat_x: 0,
     background: 0,
-    cloud: 0
+    cloud: 0,
+    sun_x: 0,
+    sun_y: 0,
+    sun_theta: 0,
+    moon_x: 0,
+    moon_y: 0,
+    moon_theta: 0
 };
 var view = {
     left_x: 0,
@@ -97,7 +108,7 @@ var x = null,
     y = null;
 
 
-var DEBUG = true;
+var DEBUG = false;
 
 function init() {
     // Make the canvas fullscreen
@@ -131,7 +142,13 @@ function init() {
     position = {
         y: BASE_POS,
         cat_x: canvas.width / 2,
-        background: 0
+        background: 0,
+        sun_x: canvas.width - sun.width / 2,
+        sun_y: canvas.height - sun.height / 2,
+        sun_theta: 0,
+        moon_x: 0 - moon.width / 2,
+        moon_y: canvas.height - moon.height / 2,
+        moon_theta: 1
     };
     // Set initial random positions of clouds
     cloudXPathArea = canvas.width - cloud.width;
@@ -206,7 +223,7 @@ function init() {
                         enterKeydown[2] = false;
                     }
                     if (enterKeydown[3]) {
-                        calibrate();
+                        createStream();
                         enterKeydown[3] = false;
                     }
                     if (enterKeydown[4]) {
@@ -334,7 +351,7 @@ function startGame() {
     wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
 }
 
-function calibrate() {
+function createStream() {
     // Browser-compatible getUserMedia forks
     navigator.getUserMedia = (navigator.getUserMedia ||
                               navigator.webkitGetUserMedia ||
@@ -362,11 +379,10 @@ function calibrate() {
                 analyser.minDecibels = -150;
                 bufferLength = analyser.frequencyBinCount;
                 freqDataArray = new Uint8Array(bufferLength);
-                analyser.getByteFrequencyData(freqDataArray);
                 
-                pitchCenter = freqDataArray[0];
-                flipCharWithStream();
+                MIN_SAMPLES = 0;
                 
+                setTimeout(calibrate, 500); // Let analyser populate before asking for values
             },
             
             // Fail - Error
@@ -380,9 +396,82 @@ function calibrate() {
     }
 }
 
-function flipCharWithStream() {
-    for (var i=0; i<bufferLength; i++){
+function calibrate() {
+    analyser.getByteFrequencyData(freqDataArray);
+    pitch.push = autoCorrelate(freqDataArray, audioCtx.sampleRate);
     
+    if (pitch.length <= 3) {
+        setTimeout(calibrate, 500);
+    }
+
+    pitchCenter = (pitch[0] + pitch[1] + pitch[2]) / 3;
+}
+
+// From https://github.com/cwilso/PitchDetect/blob/master/js/pitchdetect.js
+function autoCorrelate( freqDataArray, sampleRate ) { // Using autocorrelation to determine the pitch from FFT data
+	var SIZE = freqDataArray.length;
+	var MAX_SAMPLES = Math.floor(SIZE/2);
+	var best_offset = -1;
+	var best_correlation = 0;
+	var rms = 0;
+	var foundGoodCorrelation = false;
+	var correlations = new Array(MAX_SAMPLES);
+
+	for (var i=0;i<SIZE;i++) {
+		var val = freqDataArray[i];
+		rms += val*val;
+	}
+	rms = Math.sqrt(rms/SIZE);
+	if (rms<0.01) // not enough signal
+		return -1;
+
+	var lastCorrelation=1;
+	for (var offset = MIN_SAMPLES; offset < MAX_SAMPLES; offset++) {
+		var correlation = 0;
+
+		for (i=0; i<MAX_SAMPLES; i++) {
+			correlation += Math.abs((freqDataArray[i])-(freqDataArray[i+offset]));
+		}
+		correlation = 1 - (correlation/MAX_SAMPLES);
+		correlations[offset] = correlation; // store it, for the tweaking we need to do below.
+		if ((correlation>0.9) && (correlation > lastCorrelation)) {
+			foundGoodCorrelation = true;
+			if (correlation > best_correlation) {
+				best_correlation = correlation;
+				best_offset = offset;
+			}
+		} else if (foundGoodCorrelation) {
+			// short-circuit - we found a good correlation, then a bad one, so we'd just be seeing copies from here.
+			// Now we need to tweak the offset - by interpolating between the values to the left and right of the
+			// best offset, and shifting it a bit.  This is complex, and HACKY in this code (happy to take PRs!) -
+			// we need to do a curve fit on correlations[] around best_offset in order to better determine precise
+			// (anti-aliased) offset.
+
+			// we know best_offset >=1, 
+			// since foundGoodCorrelation cannot go to true until the second pass (offset=1), and 
+			// we can't drop into this clause until the following pass (else if).
+			var shift = (correlations[best_offset+1] - correlations[best_offset-1])/correlations[best_offset];  
+			return sampleRate/(best_offset+(8*shift));
+		}
+		lastCorrelation = correlation;
+	}
+	if (best_correlation > 0.01) {
+		// console.log("f = " + sampleRate/best_offset + "Hz (rms: " + rms + " confidence: " + best_correlation + ")")
+		return sampleRate/best_offset;
+	}
+	return -1;
+    //	var best_frequency = sampleRate/best_offset;
+}
+
+
+function flipCharWithStream() {
+    // pitch above calibrated center will set upkeydown to true
+    if (pitch[pitch.length - 1] >= pitchCenter) {
+        upKeydown = true;
+    }
+    // pitch below calibrated center will set downkeydown to true
+    if (pitch[pitch.length - 1] < pitchCenter) {
+        downKeydown = true;
     }
 }
 
@@ -392,20 +481,24 @@ function render() {
 
     flippyCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas every render
 
+    analyser.getByteFrequencyData(freqDataArray);
+    pitch.push = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    flipCharWithStream();
+    
     //TODO: If view reaches end of our background image, loop bg
     if (position.background < -3000) {
         position.background = 3000;
     }
     
     drawSpace(position.background);
+    drawSun(position.sun_x, position.sun_y, position.sun_theta);
+    drawMoon(position.moon_x, position.moon_y, position.moon_theta);
     drawClouds(
         cloudPos[0][0], 
         cloudPos[0][1], 
         cloudPos[0][2], 
         cloudPos[0][3]
     );
-    //TODO: drawSun();
-    //TODO: drawMoon();
     drawName();
     drawControls();
 
@@ -502,13 +595,22 @@ function render() {
     if (float.every(isAllTrue)) {
         promptSecret();
         float = [false, false, false, false, false];
+        // Cheat code
         if (secret == "floppybird") {
-            adminOverride();
+            adminOverride = true;
+        }
+        // Return to normal playing mode
+        else if (secret == "stop") {
+            adminOverride = false;
+        }
+        // Wrong password
+        else {
+            alert("Wrong pass!");
         }
     }
 
-    // If char hits an obstacle, trigger game over stuff
-    if (intersectsChar() === true) {
+    // If char hits an obstacle and player hasn't used cheat code, trigger game over stuff
+    if (intersectsChar() === true && !adminOverride) {
         // Stop game
         clearTimeout(renderTimeout);
         // Reset to initial conditions of game
@@ -522,6 +624,7 @@ function render() {
 
 }
 
+// Check if every element in array is true
 function isAllTrue(element, index, array) {
   return element === true;
 }
@@ -586,14 +689,54 @@ function drawSpace(x) {
     flippyCtx.drawImage(background, x, 0, background.width, background.height);
 }
 
+// Draw moon in background
+function drawMoon(moon_x, moon_y) {
+    
+    // No shadow for moon
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 0;
+    flippyCtx.shadowColor = "rgba(255,255,255)";
+    
+    var h = canvas.width / 2 - moon.width / 2; // Center of circle, x-coord
+    var k = canvas.height - moon.height / 2; // Center of circle, y-coord
+    var r = canvas.width / 2; // Radius of circle
+    position.moon_theta -= 0.001; // Angle in radians
+    moon_x = r*Math.cos(position.moon_theta * Math.PI) + h; // X Position on circle
+    moon_y = r*Math.sin(position.moon_theta * Math.PI) + k; // Y Position on circle
+    var x = moon_x; // Temp x
+    
+    flippyCtx.drawImage(moon, x, moon_y, moon.width, moon.height);
+}
+
+//Draw sun in background
+function drawSun(sun_x, sun_y) {
+    
+    // No shadow for sun
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 20;
+    flippyCtx.shadowColor = "rgba(255,215,0,0.5)";
+    
+    var h = canvas.width / 2 - sun.width / 2; // Center of circle, x-coord
+    var k = canvas.height - sun.height / 2; // Center of circle, y-coord
+    var r = canvas.width / 2; // Radius of circle
+    position.sun_theta -= 0.001; // Angle in radians
+    sun_x = r*Math.cos(position.sun_theta * Math.PI) + h; // X Position on circle
+    sun_y = r*Math.sin(position.sun_theta * Math.PI) + k; // Y Position on circle
+    var x = sun_x; // Temp x
+    
+    flippyCtx.drawImage(sun, x, sun_y, sun.width, sun.height);
+}
+
 // Draw clouds in background
 function drawClouds(x1, x2, x3, x4) {
     
-    // Set shadow of clouds to be black
+    // Set shadow properties back to blue
     flippyCtx.shadowOffsetX = 0;
-    flippyCtx.shadowOffsetY = 5;
-    flippyCtx.shadowBlur = 50;
-    flippyCtx.shadowColor = "rgba(0,0,0,0.7)";
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 20;
+    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
 
     cloudPos[2] = [x1, x2, x3, x4]; // temporary cloud x coords
  
@@ -632,24 +775,6 @@ function drawClouds(x1, x2, x3, x4) {
     flippyCtx.drawImage(cloud, cloudPos[2][1], cloudPos[3][1], cloudSize[0][1], cloudSize[1][1]);
     flippyCtx.drawImage(cloud, cloudPos[2][2], cloudPos[3][2], cloudSize[0][2], cloudSize[1][2]);
     flippyCtx.drawImage(cloud, cloudPos[2][3], cloudPos[3][3], cloudSize[0][3], cloudSize[1][3]);
-    
-    // Set shadow properties back to blue
-    flippyCtx.shadowOffsetX = 0;
-    flippyCtx.shadowOffsetY = 0;
-    flippyCtx.shadowBlur = 20;
-    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
-}
-
-//TODO: Draw moon in background
-function drawMoon(x, y) {
-    x -= view.left_x / 4;
-    flippyCtx.drawImage(moon, x, 0);
-}
-
-//TODO: Draw sun in background
-function drawSun(x, y) {
-    x -= view.left_x / 4;
-    flippyCtx.drawImage(sun, x, 0);
 }
 
 function drawTimer() {
@@ -797,7 +922,12 @@ function loadRetry() {
                 y: BASE_POS,
                 cat_x: canvas.width / 2,
                 background: 0,
-                cloud: canvas.width / 4
+                sun_x: canvas.width - sun.width / 2,
+                sun_y: canvas.height - sun.height / 2,
+                sun_theta: 0,
+                moon_x: 0 - moon.width / 2,
+                moon_y: canvas.height - moon.height / 2,
+                moon_theta: 1
             };
             view = {
                 left_x: 0,
@@ -879,15 +1009,9 @@ function pauseGame() { // Once spacebar is pressed...
     }
 }
 
+// Once float keys are triggered, ask player for password
 function promptSecret() {
     secret = prompt("Pssst, password please!");
-    // if (secret != null) {
-    //     float = [false, false, false, false, false];
-    // }
-}
-
-function adminOverride() {
-    alert("YOURE IN");
 }
 
 window.onload = function() {
@@ -903,12 +1027,9 @@ window.onload = function() {
 ---Add audio capabilities
 -x-Add background, 
     ---make background loop or add another bg + other bg objects
----Add sun and moon
--x-Add loading screen
----Add admin override function
--x-Start timer when obstacle course reaches flippy
+-x-Add sun and moon
+-x-Add admin override / cheat code functionality 
 ---Add Fork Me banner
 ---Add share buttons at retry screen (maybe)
 ---Make mobile compatible
--x-Clean up commenting and old code
 */
