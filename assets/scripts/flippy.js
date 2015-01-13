@@ -76,7 +76,8 @@ var cloud = new Image();
 cloud.src = "/assets/images/flippy/cloud.png";
 var cloudPos = [];
 var cloudSize = [];
-var sizeRan = [];
+var upDir = true;
+var rnd = [];
 var cloudXPathArea,
     cloudYPathArea;
 var isReverse = [false, false, false, false];
@@ -154,46 +155,50 @@ function init() {
     // Set initial random positions of clouds
     cloudXPathArea = canvas.width - cloud.width;
     cloudYPathArea = canvas.height - cloud.height;
-    cloudPos[0] = [ // Cloud x coords
+    cloudPos.x = [ // Cloud x coords
         cloudXPathArea * Math.random(),
         cloudXPathArea * Math.random(),
         cloudXPathArea * Math.random(),
         cloudXPathArea * Math.random()
     ];
     
-    cloudPos[1] = [ // Cloud y coords
-        cloudYPathArea * Math.random(),
-        cloudYPathArea * Math.random(),
-        cloudYPathArea * Math.random(),
-        cloudYPathArea * Math.random()
-    ];
-        
-    cloudPos[3] = [
-        cloudPos[1][0], 
-        cloudPos[1][1], 
-        cloudPos[1][2], 
-        cloudPos[1][3]
-    ];
-    
-    sizeRan = [
+    rnd = [
+        Math.random(),
+        Math.random(),
+        Math.random(),
+        Math.random(),
         Math.random() + 0.3,
         Math.random() + 0.3,
         Math.random() + 0.3,
         Math.random() + 0.3
     ];
     
+    cloudPos.init_y = [ // Cloud y-coords
+        cloudYPathArea * rnd[0],
+        cloudYPathArea * rnd[1],
+        cloudYPathArea * rnd[2],
+        cloudYPathArea * rnd[3]
+    ];
+        
+    cloudPos.current_y = [ // Copy of initial y-coords
+        cloudYPathArea * rnd[0],
+        cloudYPathArea * rnd[1],
+        cloudYPathArea * rnd[2],
+        cloudYPathArea * rnd[3]
+    ];
+    
     cloudSize[0] = [ // Cloud width
-        cloud.width * sizeRan[0], 
-        cloud.width * sizeRan[1], 
-        cloud.width * sizeRan[2], 
-        cloud.width * sizeRan[3]
+        cloud.width * rnd[4], 
+        cloud.width * rnd[5], 
+        cloud.width * rnd[6], 
+        cloud.width * rnd[7]
     ]; 
     
     cloudSize[1] = [ // Cloud height
-        cloud.height * sizeRan[0], 
-        cloud.height * sizeRan[1], 
-        cloud.height * sizeRan[2], 
-        cloud.height * sizeRan[3]
+        cloud.height * rnd[4], 
+        cloud.height * rnd[5], 
+        cloud.height * rnd[6], 
+        cloud.height * rnd[7]
     ]; 
 
     // Retrieve the context
@@ -490,10 +495,10 @@ function render() {
     drawSun(position.sun_x, position.sun_y, position.sun_theta);
     drawMoon(position.moon_x, position.moon_y, position.moon_theta);
     drawClouds(
-        cloudPos[0][0], 
-        cloudPos[0][1], 
-        cloudPos[0][2], 
-        cloudPos[0][3]
+        cloudPos.x[0], 
+        cloudPos.x[1], 
+        cloudPos.x[2], 
+        cloudPos.x[3]
     );
     drawName();
     drawControls();
@@ -524,20 +529,20 @@ function render() {
         view.left_x_copy += 10;
         view.right_x += 10;
         position.cat_x += 10;
-        cloudPos[0][0] += 10;
-        cloudPos[0][1] += 10;
-        cloudPos[0][2] += 10;
-        cloudPos[0][3] += 10;
+        cloudPos.x[0] += 10;
+        cloudPos.x[1] += 10;
+        cloudPos.x[2] += 10;
+        cloudPos.x[3] += 10;
     }
     else {
         view.left_x += 5;
         view.left_x_copy += 5;
         view.right_x += 5;
         position.cat_x += 5;
-        cloudPos[0][0] += 5;
-        cloudPos[0][1] += 5;
-        cloudPos[0][2] += 5;
-        cloudPos[0][3] += 5;
+        cloudPos.x[0] += 5;
+        cloudPos.x[1] += 5;
+        cloudPos.x[2] += 5;
+        cloudPos.x[3] += 5;
     }
 
     drawLine(view.right_x, position.y); // Draw the new position of the path
@@ -686,8 +691,8 @@ function drawSpace(x) {
     
     x -= view.left_x_copy / 4; // Position space based on view position
     if (x < canvas.width - background.width) { // If reach the end of background image, ...
-        x = 0;
-        view.left_x_copy = 0;
+        x = 0; // Set background position back to beginning of image
+        view.left_x_copy = 0; // Set view back to beginning
     }
     flippyCtx.drawImage(background, x, 0, background.width, background.height);
 }
@@ -741,43 +746,55 @@ function drawClouds(x1, x2, x3, x4) {
     flippyCtx.shadowBlur = 20;
     flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
 
-    cloudPos[2] = [x1, x2, x3, x4]; // temporary cloud x coords
+    cloudPos.x_temp = [x1, x2, x3, x4]; // temporary cloud x coords
  
     for (var i = 0; i < 4; i++) {
+        // X POSITIONS ===================================================
         // Keep clouds moving horizontally within the view of the game
-        cloudPos[2][i] -= view.left_x;
+        cloudPos.x_temp[i] -= view.left_x;
         
         // Record when clouds hit the L/R view borders
-        if (cloudPos[0][i] >= (view.right_x - cloudSize[0][i])) {
+        if (cloudPos.x[i] >= (view.right_x - cloudSize[0][i])) {
             isReverse[i] = true;
         }
-        else if (cloudPos[0][i] <= view.left_x) {
+        else if (cloudPos.x[i] <= view.left_x) {
             isReverse[i] = false;
         }
         
         // Reverse the direction clouds move in when they hit the L/R view borders
         if (isReverse[i]) {
-            cloudPos[0][i] -= 2;
+            cloudPos.x[i] -= 2;
         }
         else if (!isReverse[i]) {
-            cloudPos[0][i] += 1;
+            cloudPos.x[i] += 1;
+        }
+
+        // Y POSITIONS =====================================================
+        // Bounce clouds up/down
+
+        // If cloud y pos is above init pos - 10, change direction to downwards
+        if (cloudPos.current_y[i] <= cloudPos.init_y[i] - 10) {
+            upDir = false;
+        }
+        // If cloud y pos is below init pos + 10, change direction to upwards
+        else if (cloudPos.current_y[i] >= cloudPos.init_y[i] + 10) {
+            upDir = true;
         }
         
-        //TODO: bounce clouds up/down
-        // if (cloudPos[3][i] < (cloudPos[1][i] + 10)) {
-        //     cloudPos[3][i] + 1;
-        // }
-        // else if (cloudPos[3][i] >= (cloudPos[1][i] + 10)) {
-        //     cloudPos[3][i] - 1;
-        // }
-
+        if (upDir) { // Clouds move up
+            cloudPos.current_y[i] -= 1;
+        }
+        else { // Clouds move down
+            cloudPos.current_y[i] += 1;
+        }
+        
     }
     
     // Draw clouds
-    flippyCtx.drawImage(cloud, cloudPos[2][0], cloudPos[3][0], cloudSize[0][0], cloudSize[1][0]);
-    flippyCtx.drawImage(cloud, cloudPos[2][1], cloudPos[3][1], cloudSize[0][1], cloudSize[1][1]);
-    flippyCtx.drawImage(cloud, cloudPos[2][2], cloudPos[3][2], cloudSize[0][2], cloudSize[1][2]);
-    flippyCtx.drawImage(cloud, cloudPos[2][3], cloudPos[3][3], cloudSize[0][3], cloudSize[1][3]);
+    flippyCtx.drawImage(cloud, cloudPos.x_temp[0], cloudPos.current_y[0], cloudSize[0][0], cloudSize[1][0]);
+    flippyCtx.drawImage(cloud, cloudPos.x_temp[1], cloudPos.current_y[1], cloudSize[0][1], cloudSize[1][1]);
+    flippyCtx.drawImage(cloud, cloudPos.x_temp[2], cloudPos.current_y[2], cloudSize[0][2], cloudSize[1][2]);
+    flippyCtx.drawImage(cloud, cloudPos.x_temp[3], cloudPos.current_y[3], cloudSize[0][3], cloudSize[1][3]);
 }
 
 function drawTimer() {
@@ -939,23 +956,36 @@ function loadRetry() {
             };
             
             // Reset the clouds positions
-            cloudPos[0] = [ // Cloud x coords
+            cloudPos.x = [ // Cloud x coords
                 cloudXPathArea * Math.random(),
                 cloudXPathArea * Math.random(),
                 cloudXPathArea * Math.random(),
                 cloudXPathArea * Math.random()
             ];
-            cloudPos[1] = [ // Cloud y coords
-                cloudYPathArea * Math.random(),
-                cloudYPathArea * Math.random(),
-                cloudYPathArea * Math.random(),
-                cloudYPathArea * Math.random()
-                ];
+            
+            cloudPos.init_y = [ // Cloud y-coords
+                cloudYPathArea * rnd[0],
+                cloudYPathArea * rnd[1],
+                cloudYPathArea * rnd[2],
+                cloudYPathArea * rnd[3]
+            ];
                 
-            isReverse = [false, false, false, false]; // Reset clouds movement directions
+            cloudPos.current_y = [ // Copy of initial y-coords
+                cloudYPathArea * rnd[0],
+                cloudYPathArea * rnd[1],
+                cloudYPathArea * rnd[2],
+                cloudYPathArea * rnd[3]
+            ];
+                
+            isReverse = [false, false, false, false]; // Reset clouds x movement directions
+            upDir = true; // Reset clouds y movement direction
             
             // Reset cloud sizes
-            sizeRan = [
+            rnd = [
+                Math.random(),
+                Math.random(),
+                Math.random(),
+                Math.random(),
                 Math.random() + 0.3,
                 Math.random() + 0.3,
                 Math.random() + 0.3,
@@ -963,16 +993,16 @@ function loadRetry() {
             ];
             
             cloudSize[0] = [ // Cloud width
-                cloud.width * sizeRan[0], 
-                cloud.width * sizeRan[1], 
-                cloud.width * sizeRan[2], 
-                cloud.width * sizeRan[3]
+                cloud.width * rnd[4],
+                cloud.width * rnd[5], 
+                cloud.width * rnd[6], 
+                cloud.width * rnd[7]
             ]; 
             cloudSize[1] = [ // Cloud height
-                cloud.height * sizeRan[0], 
-                cloud.height * sizeRan[1], 
-                cloud.height * sizeRan[2], 
-                cloud.height * sizeRan[3]
+                cloud.height * rnd[4], 
+                cloud.height * rnd[5], 
+                cloud.height * rnd[6], 
+                cloud.height * rnd[7]
             ]; 
             
             // Clear the history arrays
@@ -1029,8 +1059,7 @@ window.onload = function() {
 /*
 ---Write calibrate function
 ---Add audio capabilities
--x-make background loop or add another bg + other bg objects
--x-Add Fork Me banner
 ---Add share buttons at retry screen (maybe)
 ---Make mobile compatible
+-x-Bounce clouds
 */
