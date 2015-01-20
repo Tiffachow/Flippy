@@ -43,6 +43,21 @@ Sun, moon and clouds are free vectors from dryicons.com and vecteezy.com:
       <a href="https://github.com/Tiffachow/Flippy">Fork me on GitHub</a>
     </div>
   </div>
+  <div id="score_form">
+    <br>
+    <div id="score_detail"></div>
+    <form action="submit_score.php" method="POST">
+      <br>
+      Your alias : <input type="text" id="alias" value="FLIPPY" size="30px" maxlength="30" required>
+      <br><br>
+      <button type="button" id="submit">ENTER</button>
+    </form>
+  </div>
+  <div id="leaderboard">
+    <h1>TOP SCORES</h1><br>
+    <h2>ALIAS SCORE</h2><br>
+    <div id="top_entries"></div>
+  </div>
   <canvas id='canvas'>
     <img id="fallback" src="assets/images/flippy/cat.png">
   </canvas>

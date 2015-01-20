@@ -1,4 +1,4 @@
-var WebFont, beginAudio, loseAudio, audioCtx;
+var WebFont, score_form, leaderboard, request, beginAudio, loseAudio, audioCtx;
 
 // Secret
 var float = [false, false, false, false, false];
@@ -64,6 +64,9 @@ var endPauseTime;
 var pauseDuration = 0;
 var endTime;
 var paused = false;
+var timer = {};
+var secElapsed,
+    msElapsed;
 
 //Background image objects, spritesheet
 var background = new Image();
@@ -103,12 +106,23 @@ var isGameOver = null;
 
 // Retry variables
 var RETRY_X;
-var RETRY_Y = 660;
+var RETRY_Y = 700;
 var RETRY_WIDTH;
 var RETRY_HEIGHT = 120;
-var x = null,
-    y = null;
-
+var mouse_retry_x = null,
+    mouse_retry_y = null;
+    
+// Leaderboard and submit score variables
+var SCORE_X,
+    SCORE_Y,
+    LEADER_X,
+    SCORE_HEIGHT,
+    SCORE_WIDTH,
+    LEADER_WIDTH,
+    onLink = false,
+    mouse_score_x = null,
+    mouse_score_y = null,
+    score_string;
 
 var DEBUG = false;
 
@@ -800,10 +814,10 @@ function drawClouds(x1, x2, x3, x4) {
 function drawTimer() {
     var timerWidth = canvas.width / 2 - 50;
     var timerHeight = 350;
-    var msCounter = 0;
-    var secElapsed = 0;
-    var secCounter = 0;
-    var minElapsed = 0;
+    timer.msCounter = 0;
+    secElapsed = 0;
+    timer.secCounter = 0;
+    timer.minElapsed = 0;
     pauseDuration = endPauseTime - startPauseTime; // Keep track of how much time is spent being paused
     endTime = new Date(); // Start keeping track of ms passed
     
@@ -811,21 +825,25 @@ function drawTimer() {
         startTime.setMilliseconds(startTime.getMilliseconds() + (pauseDuration)); // If paused, add the time passed while paused to the starting time
     }
     
-    var msElapsed = endTime - startTime; // The total amount of time passed is the difference between the start and end, accounting for all the paused time
+    msElapsed = endTime - startTime; // The total amount of time passed is the difference between the start and end, accounting for all the paused time
     
-    // Logic for calculating how many ms = sec = min
-    secElapsed = Math.floor(msElapsed / 1000);
-    msCounter = msElapsed % 1000;
-    minElapsed = Math.floor(secElapsed / 60);
-    secCounter = secElapsed % 60;
+    calcScore();
     
     // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
     flippyCtx.font = "400 40px Indie Flower";
     flippyCtx.fillStyle = "#fff";
-    flippyCtx.fillText(minElapsed + " m", timerWidth - 100, timerHeight);
-    flippyCtx.fillText(secCounter + " s", timerWidth, timerHeight);
-    flippyCtx.fillText(msCounter, timerWidth + 90, timerHeight);
+    flippyCtx.fillText(timer.minElapsed + " m", timerWidth - 100, timerHeight);
+    flippyCtx.fillText(timer.secCounter + " s", timerWidth, timerHeight);
+    flippyCtx.fillText(timer.msCounter, timerWidth + 90, timerHeight);
     flippyCtx.fillText("ms", timerWidth + 150, timerHeight);
+}
+
+function calcScore() {
+    // Logic for calculating how many ms = sec = min
+    secElapsed = Math.floor(msElapsed / 1000);
+    timer.msCounter = msElapsed % 1000;
+    timer.minElapsed = Math.floor(secElapsed / 60);
+    timer.secCounter = secElapsed % 60;
 }
 
 function createChar() {
@@ -899,6 +917,21 @@ function loadGameOver() {
     flippyCtx.font = "400 80px Indie Flower";
     flippyCtx.fillStyle = "#fff";
     flippyCtx.fillText("Retry?", RETRY_X, RETRY_Y);
+    // Draw Submit Score option
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 0;
+    SCORE_Y = 580;
+    SCORE_X = canvas.width / 2 - flippyCtx.measureText("Submit Score").width + 30;
+    flippyCtx.font = "800 60px Indie Flower";
+    flippyCtx.fillStyle = "#df1e1e";
+    flippyCtx.fillText("SUBMIT SCORE", SCORE_X, SCORE_Y);
+    // Draw view Leaderboard option
+    var LEADER_X = canvas.width / 2 + 30;
+    flippyCtx.font = "800 60px Indie Flower";
+    flippyCtx.fillStyle = "#ffde2b";
+    flippyCtx.fillText("LEADERBOARD", LEADER_X, SCORE_Y);
+    submitScoreviewLeaderboard();
     // Cue Flippy Lose audio clip
     loseAudio.play();
 
@@ -908,21 +941,25 @@ function loadRetry() {
     $(document).mousemove(function(event) {
         // Get the mouse position relative to the canvas element.
             if (event.pageX) {
-                x = event.pageX;
-                y = event.pageY;
+                mouse_retry_x = event.pageX;
+                mouse_retry_y = event.pageY;
             }
             
         RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2;
-        RETRY_WIDTH = flippyCtx.measureText("Retry?").width;
-        RETRY_Y = 660 + 40;    
+        RETRY_WIDTH = flippyCtx.measureText("Retry?").width;  
             
         // If mouse is over retry area and game is over:    
-        if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT) && isGameOver == "yes") {
+        if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
             // Change the cursor into a pointer
             document.body.style.cursor = "pointer";
+            onLink = true;
         }
         // If not over the retry area, cursor is normal
         else {
+            onLink = false;
+        }
+        
+        if (!onLink) {
             document.body.style.cursor = "";
         }
     });
@@ -930,12 +967,14 @@ function loadRetry() {
     $(document).click(function(ev) { // Check if player has clicked
 
         // Is the mouse over retry area  while game is over (and user has clicked)?
-        if (x >= RETRY_X && x <= (RETRY_X + RETRY_WIDTH) && y <= (RETRY_Y) && y >= (RETRY_Y - RETRY_HEIGHT) && isGameOver == "yes") {
+        if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
             
             // Allow player to RETRY by resetting render()'s variables to its initial values and running render
             
             clearTimeout(renderTimeout);
             ACCELERATION = 60;
+            score_form.hide();
+            leaderboard.hide();
             
             // Reset the line position and view position
             position = {
@@ -1023,6 +1062,97 @@ function loadRetry() {
     });
 }
 
+function submitScoreviewLeaderboard() {
+    $(document).mousemove(function(event) {
+        // Get the mouse position relative to the canvas element.
+            if (event.pageX) {
+                mouse_score_x = event.pageX;
+                mouse_score_y = event.pageY;
+            }
+            
+        SCORE_X = canvas.width / 2 - flippyCtx.measureText("SUBMIT SCORE").width - 30;
+        LEADER_X = canvas.width / 2 + 30;
+        SCORE_WIDTH = flippyCtx.measureText("SUBMIT SCORE").width;
+        SCORE_HEIGHT = 52;
+        LEADER_WIDTH = flippyCtx.measureText("LEADERBOARD").width;
+            
+        // If mouse is over submit score area or leaderboard area:    
+        if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            // Change the cursor into a pointer
+            document.body.style.cursor = "pointer";
+            onLink = true;
+        }
+        else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            // Change the cursor into a pointer
+            document.body.style.cursor = "pointer";
+            onLink = true;
+        }
+        // If not over the clickable area, cursor is normal
+        else {
+            onLink = false;
+        }
+    });
+    
+    $(document).click(function(ev) { // Check if player has clicked
+
+        // Is the mouse over submit score link while game is over (and user has clicked)?
+        if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            
+            score_form.show();
+            leaderboard.hide();
+            
+            score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
+            $("#score_detail").html(score_string);
+            
+            // On submitting our form, send player's alias and score to the server
+            $("#submit").click(function(event){
+                var alias = $("#alias").val;
+                
+                function isAlphaNum(a) {
+                    var reg = /[^A-Za-z0-9 ]/;
+                    return !reg.test(a);
+                }
+
+                if (isAlphaNum(alias)) {
+                
+                    $.ajax({
+                        url: "/projects/flippy/leaderboard/server.js",
+                        type: "POST",
+                        data: {alias:alias, score:msElapsed}, 
+                    });
+                    
+                    score_form.hide();
+                }
+                else {
+                    alert("Letters, numbers, and space only!");
+                }
+                
+            });
+        }
+        // If leaderboard link is clicked...
+        else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            leaderboard.show();
+            score_form.hide();
+        
+            $.ajax({                                      
+              url: '/projects/flippy/leaderboard/server.js', // Get data from database          
+              data: "",
+              type: "GET",
+              dataType: 'json',                   
+              success: function(data)         
+              {
+                console.log(data);
+                for (var i = 0; i <= data.result.length; i++) {
+                    $('#top_entries').html(data.result[i].id + " " + data.result[i].score + "<br>"); // Update Leaderboard!
+                }
+                
+              } 
+            });
+            
+        }
+    });
+}
+
 function pauseGame() { // Once spacebar is pressed...
     // Check if game is over
     if (intersectsChar() === false) {
@@ -1051,6 +1181,10 @@ function promptSecret() {
 window.onload = function() {
     var load_screen = document.getElementById("load_screen");
 	document.body.removeChild(load_screen); // Remove loading screen once everything is loaded
+	score_form = $("#score_form");
+	score_form.hide();
+	leaderboard = $("#leaderboard");
+	leaderboard.hide();
 	init();
 };
 
@@ -1059,7 +1193,15 @@ window.onload = function() {
 /*
 ---Write calibrate function
 ---Add audio capabilities
----Add share buttons at retry screen (maybe)
 ---Make mobile compatible
--x-Bounce clouds
+---Make database & leaderboard screen
+    ---Make cursor pointer for links
+    ---BUG: links run multiple times after restarting
+    -x-Create form for submitting scores
+    -x-Create mysql database
+    -x-Create scripts for getting scores to DB and retrieving from DB
+    -x-Create leaderboard element
+---Use spritesheet
+---Change all to jQuery
 */
+
