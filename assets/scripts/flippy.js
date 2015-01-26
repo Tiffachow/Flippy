@@ -1,4 +1,4 @@
-var WebFont, score_form, leaderboard, request, beginAudio, loseAudio, audioCtx;
+var WebFont, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
 var float = [false, false, false, false, false];
@@ -87,18 +87,20 @@ var isReverse = [false, false, false, false];
 
 // Character object variables
 var charImg = new Image();
-var charImgR = new Image();
-charImg.src = "/assets/images/flippy/char-cat.png";
-charImg.width = 35;
-charImg.height = 34;
-charImgR.src = "/assets/images/flippy/char-cat-r.png";
-charImgR.width = 35;
-charImgR.height = 34;
+// var charImgR = new Image();
+charImg.src = "/assets/images/flippy/nyan_cat_sprite.png";
+charImg.width = 175;
+charImg.height = 80;
+var crop = {x:0, y:0};
+// charImgR.src = "/assets/images/flippy/char-cat-r.png";
+// charImgR.width = 35;
+// charImgR.height = 34;
 
 // createCharacter function variables
 var upKeydown = false;
 var downKeydown = false;
 var lastKeydown = "up";
+var tailPosHistory = []; 
 
 // Pause variable
 var isRunning;
@@ -122,6 +124,7 @@ var SCORE_X,
     onLink = false,
     mouse_score_x = null,
     mouse_score_y = null,
+    submitted = false,
     score_string;
 
 var DEBUG = false;
@@ -529,8 +532,15 @@ function render() {
         flippyCtx.stroke();
         flippyCtx.closePath();
     }
-
-    $(charImg, charImgR).onload = createChar(); // Create character
+    
+    // Draw tail from saved history
+    if (tailPosHistory.length > 0) {
+        for (var i = 1; i < tailPosHistory.length; i++) {
+            drawTail(charImg, tailPosHistory[i].x, tailPosHistory[i].y);
+        }
+    }
+    
+    $(charImg).onload = createChar(); // Create character
 
     // Move to start, save the position
     flippyCtx.beginPath();
@@ -589,6 +599,11 @@ function render() {
     while (positionHistory[1].x < view.left_x) {
         positionHistory.shift();
     }
+    
+    // // Exclude out of view tails from being drawn
+    // while (tailPosHistory[1].x < view.left_x) {
+    //     tailPosHistory.shift();
+    // }
     
     // When flippy encounters the beginning of the path, the timer starts and continues
     if (positionHistory[0].x > position.cat_x - 10 && positionHistory[0].x < position.cat_x + 10) {
@@ -670,9 +685,39 @@ function moveLine(x, y) {
 }
 
 // Set view to follow cat's progression
-function drawCat(x, y, z) {
-    y -= view.left_x;
-    flippyCtx.drawImage(x, y, z, charImg.width, charImg.height);
+function drawCat(catsprite, x, y) {
+    x -= view.left_x;
+    if (crop.x < charImg.width*4/5){
+        crop.x += charImg.width/5;
+    }
+    else {
+        crop.x = 0;
+    }
+    flippyCtx.shadowColor = "rgba(255,215,0,0)";
+    flippyCtx.drawImage(catsprite, crop.x, crop.y, charImg.width/5, 22, x, y, charImg.width/5, 22);
+    flippyCtx.shadowColor = "rgba(255,215,0,0.5)";
+}
+
+// Draw rainbow tail sprite
+function drawTail(catsprite, x, y) {
+    flippyCtx.shadowColor = "rgba(255,215,0,0)";
+    x -= view.left_x;
+    
+    if (crop.y >= 23 && crop.y < 40) {
+        crop.y += 1;
+    }
+    else {
+        crop.y = 23;
+    }
+    
+    if (Math.round(x / 10) % 2 == 0) { // If the x pos of the cat is even, draw tail higher
+        y += 2;
+    } 
+    else { // Otherwise draw tail lower
+        y -= 2;
+    }
+    flippyCtx.drawImage(catsprite, 0, crop.y, 12, 20, x, y, 12, 20);
+    flippyCtx.shadowColor = "rgba(255,215,0,0.5)";
 }
 
 // Test if any of the array's elements (y position) indicate an up obstacle
@@ -827,7 +872,7 @@ function drawTimer() {
     
     msElapsed = endTime - startTime; // The total amount of time passed is the difference between the start and end, accounting for all the paused time
     
-    calcScore();
+    calcScore(msElapsed);
     
     // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
     flippyCtx.font = "400 40px Indie Flower";
@@ -838,7 +883,7 @@ function drawTimer() {
     flippyCtx.fillText("ms", timerWidth + 150, timerHeight);
 }
 
-function calcScore() {
+function calcScore(msElapsed) {
     // Logic for calculating how many ms = sec = min
     secElapsed = Math.floor(msElapsed / 1000);
     timer.msCounter = msElapsed % 1000;
@@ -850,33 +895,45 @@ function createChar() {
     // If up is pressed, draw rightside up img
     if (upKeydown === true) {
         if (isRunning) {
-            drawCat(charImg, position.cat_x, 470);
-            // Set last position as up
-            lastKeydown = "up";
+            drawTail(charImg, position.cat_x, 480); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:480}); // Save tail position
+            // Draw rightside up cat above the line
+            crop.y = 0;
+            drawCat(charImg, position.cat_x, 480);
+            lastKeydown = "up"; // Set last position as up
         }
-        // Reset keydown event listener variable
-        upKeydown = false;
+        upKeydown = false; // Reset keydown event listener variable
     }
     // If down is pressed, draw upside down img
     else if (downKeydown === true) {
         if (isRunning) {
-            drawCat(charImgR, position.cat_x, 497);
-            // Set last position as down
-            lastKeydown = "down";
+            drawTail(charImg, position.cat_x, 500); // Draw tail of cat
+            tailPosHistory.push({x:position.cat_x, y:500}); // Save tail's position
+            // Draw upside down cat below the line
+            crop.y = 60;
+            drawCat(charImg, position.cat_x, 500);
+            lastKeydown = "down"; // Set last position as down
         }
-        // Reset keydown event listener variable
-        downKeydown = false;
+        downKeydown = false; // Reset keydown event listener variable
     }
 
     // If no key was pressed, maintain last position of img
     else {
         // If img was previously in the up position, draw img in up position
         if (lastKeydown == "up") {
-            drawCat(charImg, position.cat_x, 470);
+            drawTail(charImg, position.cat_x, 480); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:480}); // Save tail position
+            // Draw cat rightside up above the line
+            crop.y = 0;
+            drawCat(charImg, position.cat_x, 480);
         }
         // If img was previously in the down position, draw img in down position
         else if (lastKeydown == "down") {
-            drawCat(charImgR, position.cat_x, 497);
+            drawTail(charImg, position.cat_x, 500); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:500}); // Save tail position
+            // Draw upside down cat below the line
+            crop.y = 60;
+            drawCat(charImg, position.cat_x, 500);
         }
     }
 }
@@ -900,11 +957,11 @@ function intersectsChar() {
 
 // Return true if there is an element that is in the same position as the cat character
 function isInMidXUpYPos(element, index, array) {
-    return element.x < position.cat_x + 10 && element.x > position.cat_x - 10 && element.y == UP_OBST_POS;
+    return element.x < position.cat_x + 28 && element.x > position.cat_x - 18 && element.y == UP_OBST_POS;
 }
 
 function isInMidXDwnYPos(element, index, array) {
-    return element.x < position.cat_x + 10 && element.x > position.cat_x - 10 && element.y == DWN_OBST_POS;
+    return element.x < position.cat_x + 28 && element.x > position.cat_x - 18 && element.y == DWN_OBST_POS;
 }
 
 function loadGameOver() {
@@ -1047,11 +1104,13 @@ function loadRetry() {
             // Clear the history arrays
             positionHistory.length = 0;
             lastElems.length = 0;
+            tailPosHistory.length = 0;
             
             // Reset the character to default position
             upKeydown = false;
             downKeydown = false;
             lastKeydown = "up";
+            crop = {x:0, y:0};
             
             // Run the game!
             render();
@@ -1093,61 +1152,80 @@ function submitScoreviewLeaderboard() {
         }
     });
     
+    function isAlphaNum(a) {
+        var reg = /[^A-Za-z0-9 ]/;
+        return !reg.test(a);
+    }
+    
     $(document).click(function(ev) { // Check if player has clicked
 
         // Is the mouse over submit score link while game is over (and user has clicked)?
         if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
             
+            // Show form and hide leaderboard
             score_form.show();
             leaderboard.hide();
             
+            // On form, let users know the score they're submitting
             score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
             $("#score_detail").html(score_string);
             
-            // On submitting our form, send player's alias and score to the server
-            $("#submit").click(function(event){
-                var alias = $("#alias").val;
-                
-                function isAlphaNum(a) {
-                    var reg = /[^A-Za-z0-9 ]/;
-                    return !reg.test(a);
-                }
-
-                if (isAlphaNum(alias)) {
-                
-                    $.ajax({
-                        url: "/projects/flippy/leaderboard/server.js",
-                        type: "POST",
-                        data: {alias:alias, score:msElapsed}, 
-                    });
-                    
-                    score_form.hide();
-                }
-                else {
-                    alert("Letters, numbers, and space only!");
-                }
-                
-            });
         }
+        
+        // Check if user submitted form
+        $("#submit").click(function(event){
+            submitted = true;
+        });
+        
+        // On submitting our form, send player's alias and score to the server
+        if (submitted) {
+            var alias = $("#alias").val();
+            submitted = false;
+            
+            if (isAlphaNum(alias)) {
+            
+                $.ajax({
+                    url: "/projects/flippy/leaderboard/server.js",
+                    type: "POST",
+                    data: {alias:alias, score:msElapsed},
+                }).done(function(){
+                    console.log("New score added to database!");
+                }).fail(function() {
+                    console.log("Failed to add new score to database.");
+                });
+                
+                score_form.hide();
+            }
+            else {
+                alert("Letters, numbers, and space only!");
+            }
+        }
+        
         // If leaderboard link is clicked...
         else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
             leaderboard.show();
             score_form.hide();
         
-            $.ajax({                                      
-              url: '/projects/flippy/leaderboard/server.js', // Get data from database          
-              data: "",
+            $.ajax({ // Get data from database                                        
+              url: '/projects/flippy/leaderboard/server.js',
               type: "GET",
-              dataType: 'json',                   
-              success: function(data)         
-              {
-                console.log(data);
+              dataType: "text",
+            }).done(function(data)
+              { // Print past top scores in leaderboard
+              
+                console.log(data); 
+                
                 for (var i = 0; i <= data.result.length; i++) {
-                    $('#top_entries').html(data.result[i].id + " " + data.result[i].score + "<br>"); // Update Leaderboard!
+                    
+                    calcScore(data.result[i].score);
+                    $('#top_entries').html(data.result[i].id + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>"); // Update Leaderboard!
+                
+                    console.log(data.result[i].id + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms ");
                 }
                 
-              } 
-            });
+              }).fail(function(a, b, c) { 
+                  console.log(a, b, c);
+              });
             
         }
     });
@@ -1194,14 +1272,14 @@ window.onload = function() {
 ---Write calibrate function
 ---Add audio capabilities
 ---Make mobile compatible
----Make database & leaderboard screen
+-x-Make database & leaderboard screen
     ---Make cursor pointer for links
-    ---BUG: links run multiple times after restarting
-    -x-Create form for submitting scores
-    -x-Create mysql database
-    -x-Create scripts for getting scores to DB and retrieving from DB
+    -x-BUG: links run multiple times after restarting, alphanumeric check doesn't work
     -x-Create leaderboard element
----Use spritesheet
+        -x- Format leaderboard entries
+-x-Use spritesheet
+    -x-Draw character with spritesheet
+    -x-Draw trail with spritesheet
+    ---Exclude drawing trails off screen
 ---Change all to jQuery
 */
-

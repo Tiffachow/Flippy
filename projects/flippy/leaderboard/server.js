@@ -38,16 +38,18 @@ function isInt(a){
 app.post('/projects/flippy/leaderboard', function (req, res) {
     
     connection.connect();
+    
     if (isAlphaNum(req.body.alias) && isInt(req.body.score)) {
         connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')");
     }
+    
     connection.end();
 });
 
 
 // Get from database
 app.get('/projects/flippy/leaderboard', function (req, res) {
-    //   res.send('Hello World!')
+    
     connection.connect();
     
     connection.query("SELECT scores FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
@@ -59,20 +61,20 @@ app.get('/projects/flippy/leaderboard', function (req, res) {
 });
 
 
-// var server = app.listen(process.env.PORT, function () {
+var server = app.listen(process.env.PORT, function () {
 
-//   var host = server.address().address;
-//   var port = server.address().port;
+  var host = server.address().address;
+  var port = server.address().port;
 
-//   console.log('Example app listening at http://%s:%s', host, port);
+  console.log('Example app listening at http://%s:%s', host, port);
 
-// });
-
-connection.connect();
-    
-connection.query("SELECT * FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
-    if (err) throw err;
-    console.log(rows);
 });
 
-connection.end();
+// connection.connect();
+    
+// connection.query("SELECT * FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
+//     if (err) throw err;
+//     console.log(rows);
+// });
+
+// connection.end();
