@@ -50,8 +50,8 @@ canvas {
     width: 33%;
     height: 140px;
     position: absolute;
-    top: 365px;
-    left: 33.5%;
+    top: 46%;
+    left: calc((67% - 20px)/2);
     border-radius: 15px;
     border: 10px solid #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.7);

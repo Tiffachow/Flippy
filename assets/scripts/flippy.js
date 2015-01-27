@@ -108,10 +108,10 @@ var isRunning;
 var isGameOver = null;
 
 // Retry variables
-var RETRY_X;
-var RETRY_Y = 700;
-var RETRY_WIDTH;
-var RETRY_HEIGHT = 120;
+var RETRY_X,
+    RETRY_Y,
+    RETRY_WIDTH,
+    RETRY_HEIGHT;
 var mouse_retry_x = null,
     mouse_retry_y = null;
     
@@ -1019,28 +1019,52 @@ function isInMidXDwnYPos(element, index, array) {
 }
 
 function loadGameOver() {
-    // Draw "Game Over" notice
-    flippyCtx.font = "400 100px Indie Flower";
+    // Draw "Game Over" notice (for vertical and horizontal orientations)
+    if(window.innerHeight > window.innerWidth){
+        var fontSize = canvas.width/10;
+        var posY = canvas.height/2.2;
+    }
+    else {
+        fontSize = canvas.width/14.36;
+        posY = canvas.height/1.73;
+    }
+    var titleFont = "400 " + fontSize + "px " + "Indie Flower";
+    flippyCtx.font = titleFont;
     flippyCtx.fillStyle = "#fff";
-    flippyCtx.fillText("Game Over", canvas.width / 2 - flippyCtx.measureText("Game Over").width / 2, 450);
+    flippyCtx.fillText("Game Over", canvas.width / 2 - flippyCtx.measureText("Game Over").width / 2, posY);
     // Draw Retry? notice
-    RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 + 30;
-    flippyCtx.font = "400 80px Indie Flower";
-    flippyCtx.fillStyle = "#fff";
+    RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2;
+    fontSize = canvas.width/17.95;
+    flippyCtx.font = titleFont;
+    RETRY_Y = canvas.height/1.12;
     flippyCtx.fillText("Retry?", RETRY_X, RETRY_Y);
     // Draw Submit Score option w/ black shadow
     flippyCtx.shadowOffsetX = 0;
     flippyCtx.shadowOffsetY = 0;
     flippyCtx.shadowBlur = 10;
     flippyCtx.shadowColor = "rgba(0,0,0,0.5)";
-    SCORE_Y = 580;
-    SCORE_X = canvas.width / 2 - flippyCtx.measureText("Submit Score").width + 30;
-    flippyCtx.font = "800 60px Indie Flower";
+    if(window.innerHeight > window.innerWidth){
+        fontSize = canvas.width/20;
+    }
+    else {
+        fontSize = canvas.width/24;
+    }
+    SCORE_Y = canvas.height/1.35;
+    SCORE_X = canvas.width / 2 - flippyCtx.measureText("Submit Score").width/2 - canvas.width/11;
+    titleFont = "800 " + fontSize + "px " + "Indie Flower";
+    flippyCtx.font = titleFont;
     flippyCtx.fillStyle = "#df1e1e";
     flippyCtx.fillText("SUBMIT SCORE", SCORE_X, SCORE_Y);
     // Draw view Leaderboard option w/ black shadow
     var LEADER_X = canvas.width / 2 + 30;
-    flippyCtx.font = "800 60px Indie Flower";
+    if(window.innerHeight > window.innerWidth){
+        fontSize = canvas.width/20;
+    }
+    else {
+        fontSize = canvas.width/24;
+    }
+    titleFont = "800 " + fontSize + "px " + "Indie Flower";
+    flippyCtx.font = titleFont;
     flippyCtx.fillStyle = "#ffde2b";
     flippyCtx.fillText("LEADERBOARD", LEADER_X, SCORE_Y);
     // Reset shadow
@@ -1059,7 +1083,8 @@ function loadRetry() {
                 mouse_retry_y = event.pageY;
             }
             
-        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 20;
+        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 40;
+        RETRY_HEIGHT = canvas.height/6.52;
         RETRY_WIDTH = flippyCtx.measureText("Retry?").width + 60;  
             
         // If mouse is over retry area and game is over:    
@@ -1206,6 +1231,13 @@ function submitScoreviewLeaderboard() {
         if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
             
             // Show form and hide leaderboard
+            if (onMobile) {
+                score_form.css({
+                    width: "80%",
+                    top: "40%",
+                    left: "calc((20% - 20px)/2)"
+                });
+            }
             score_form.show();
             leaderboard.hide();
             
@@ -1330,9 +1362,6 @@ window.onload = function() {
 ---Add audio capabilities
 ---Make mobile compatible
     ---Change all absolute measurements to relative to screen sizes
--x-Make cursor pointer for links
--x-Change text and line colors
 ---Test database, form and leaderboard functionalities
 ---Exclude drawing trails off screen
--x-Change all to jQuery
 */
