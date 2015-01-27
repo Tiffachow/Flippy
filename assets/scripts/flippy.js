@@ -1,3 +1,4 @@
+var onMobile = false;
 var WebFont, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
@@ -30,9 +31,9 @@ var startY;
 var text;
 
 // Render function variables
-var BASE_POS = 500;
-var UP_OBST_POS = 400;
-var DWN_OBST_POS = 600;
+var BASE_POS,
+    UP_OBST_POS,
+    DWN_OBST_POS;
 var NUM_OF_ELEMS = -20;
 var ACCELERATION = 60;
 var position = {
@@ -121,7 +122,6 @@ var SCORE_X,
     SCORE_HEIGHT,
     SCORE_WIDTH,
     LEADER_WIDTH,
-    onLink = false,
     mouse_score_x = null,
     mouse_score_y = null,
     submitted = false,
@@ -135,6 +135,10 @@ function init() {
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
     
+    BASE_POS = canvas.height/1.6;
+    UP_OBST_POS = canvas.height/1.96;
+    DWN_OBST_POS = canvas.height/1.3;
+    
     // Set size of backgound images
     sun.width = canvas.width * 2.5 / 7;
     sun.height = sun.width * 1680 / 1553;
@@ -144,8 +148,8 @@ function init() {
     cloud.height = cloud.width * 441 / 700;
 
     // Get the audio clips
-    beginAudio = document.getElementsByTagName("audio")[0];
-    loseAudio = document.getElementsByTagName("audio")[1];
+    beginAudio = $("audio")[0];
+    loseAudio = $("audio")[1];
     
     try { // Set up AudioContext
     // For browser compatibility: safari needs window, webkit/blink needs webkit prefix
@@ -224,96 +228,103 @@ function init() {
     }
 
     // Set variables to listen for enter, up, down and spacebar keydowns
-    $(document).keydown(function(event) {
-        switch (event.keyCode) {
-            // Enter key will enable player to trigger instructions, calibration, and start the game
-            case 13:
-                enterKeydown.push(true);
-                if (isGameBegin) {
-                    if (enterKeydown[0]) {
-                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER to continue.";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[0] = false;
+    $(document).on("keydown tap", function(event) {
+        if(onMobile) {
+            createStream();
+            render();
+            $(this).off("tap");
+        }
+        else {
+            switch (event.keyCode) {
+                // Enter key will enable player to trigger instructions, calibration, and start the game
+                case 13:
+                    enterKeydown.push(true);
+                    if (isGameBegin) {
+                        if (enterKeydown[0]) {
+                            text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
+                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                            enterKeydown[0] = false;
+                        }
+                        if (enterKeydown[1]) {
+                            text = "Calibration Time!";
+                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                            enterKeydown[1] = false;
+                        }
+                        if (enterKeydown[2]) {
+                            text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
+                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                            enterKeydown[2] = false;
+                        }
+                        if (enterKeydown[3]) {
+                            createStream();
+                            enterKeydown[3] = false;
+                        }
+                        if (enterKeydown[4]) {
+                            flippyCtx.font = "400 50px Indie Flower";
+                            text = "Get Ready...    ENTER/tap to START!";
+                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                            enterKeydown[4] = false;
+                        }
+                        if (enterKeydown[5]) {
+                            // start game
+                            render();
+                            enterKeydown[5] = false;
+                        }
                     }
-                    if (enterKeydown[1]) {
-                        text = "Calibration Time!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[1] = false;
+                    break;
+                // UP & DWN keys will trigger character flipping
+                case 38:
+                    upKeydown = true;
+                    break;
+                case 40:
+                    downKeydown = true;
+                    break;
+                // Set spacebar to pause and resume game
+                case 32:
+                    pauseGame();
+                    break;
+                // Secret
+                case 70:
+                    if (float[0] === false) { 
+                        float[0] = true;
                     }
-                    if (enterKeydown[2]) {
-                        text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[2] = false;
+                    else {
+                        float[0] = false;
                     }
-                    if (enterKeydown[3]) {
-                        createStream();
-                        enterKeydown[3] = false;
+                    break;
+                case 76:
+                    if (float[1] === false) { 
+                        float[1] = true;
                     }
-                    if (enterKeydown[4]) {
-                        flippyCtx.font = "400 50px Indie Flower";
-                        text = "Get Ready...    ENTER to START!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[4] = false;
+                    else {
+                        float[1] = false;
                     }
-                    if (enterKeydown[5]) {
-                        // start game
-                        render();
-                        enterKeydown[5] = false;
+                    break;
+                case 79:
+                    if (float[2] === false) { 
+                        float[2] = true;
                     }
-                }
-                break;
-            // UP & DWN keys will trigger character flipping
-            case 38:
-                upKeydown = true;
-                break;
-            case 40:
-                downKeydown = true;
-                break;
-            // Set spacebar to pause and resume game
-            case 32:
-                pauseGame();
-                break;
-            // Secret
-            case 70:
-                if (float[0] === false) { 
-                    float[0] = true;
-                }
-                else {
-                    float[0] = false;
-                }
-                break;
-            case 76:
-                if (float[1] === false) { 
-                    float[1] = true;
-                }
-                else {
-                    float[1] = false;
-                }
-                break;
-            case 79:
-                if (float[2] === false) { 
-                    float[2] = true;
-                }
-                else {
-                    float[2] = false;
-                }
-                break;
-            case 65:
-                if (float[3] === false) { 
-                    float[3] = true;
-                }
-                else {
-                    float[3] = false;
-                }
-                break;
-            case 84:
-                if (float[4] === false) { 
-                    float[4] = true;
-                }
-                else {
-                    float[4] = false;
-                }
-                break;
+                    else {
+                        float[2] = false;
+                    }
+                    break;
+                case 65:
+                    if (float[3] === false) { 
+                        float[3] = true;
+                    }
+                    else {
+                        float[3] = false;
+                    }
+                    break;
+                case 84:
+                    if (float[4] === false) { 
+                        float[4] = true;
+                    }
+                    else {
+                        float[4] = false;
+                    }
+                    break;
+            }
         }
     });
     
@@ -335,27 +346,34 @@ function init() {
 // Wrap text to get paragraph form
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
     flippyCtx.fillStyle = "#00c6ff";
-    flippyCtx.clearRect(startX - 10,350,maxWidth + 10,4*lineHeight);
-    flippyCtx.fillRect(startX - 10,350,maxWidth + 10,4*lineHeight);
+    flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+    flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
     var words = text.split(' ');
     var line = '';
     
     for(var n = 0; n < words.length; n++) {
-      var testLine = line + words[n] + ' ';
-      var metrics = context.measureText(testLine);
-      var testWidth = metrics.width;
-      flippyCtx.fillStyle = "#fff";
-      if (testWidth > maxWidth && n > 0) {
-        context.fillText(line, x, y);
-        line = words[n] + ' ';
-        y += lineHeight;
-      }
-      else {
-        line = testLine;
-      }
+        var testLine = line + words[n] + ' ';
+        var metrics = context.measureText(testLine);
+        var testWidth = metrics.width;
+        flippyCtx.fillStyle = "#fff";
+        var fontSize = canvas.width/77;
+        var titleFont = "100 " + fontSize + "px " + "Indie Flower";
+        flippyCtx.font = titleFont;
+        flippyCtx.shadowOffsetX = 0;
+        flippyCtx.shadowOffsetY = 0;
+        flippyCtx.shadowBlur = fontSize;
+        flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
+        if (testWidth > maxWidth && n > 0) {
+            context.fillText(line, x, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+        }
+        else {
+            line = testLine;
+        }
     }
     context.fillText(line, x, y);
-    }
+}
 
 // Start the first instructions and set initial properties
 function startGame() {
@@ -369,9 +387,22 @@ function startGame() {
     maxWidth = canvas.width / 3;
     lineHeight = 65;
     startX = canvas.width / 2 - canvas.width / 6 + 15;
-    startY = 400;
-    text = "CONTROLS: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER to continue.";
-    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+    startY = canvas.height/1.9;
+    text = "CONTROLS: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
+    if(onMobile) {
+        var fontSize = canvas.width/10;
+        var titleFont = "400 " + fontSize + "px " + "Indie Flower";
+        flippyCtx.font = titleFont;
+        flippyCtx.fillStyle = "#fff";
+        flippyCtx.shadowOffsetX = 0;
+        flippyCtx.shadowOffsetY = 0;
+        flippyCtx.shadowBlur = fontSize/7.5;
+        flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
+        flippyCtx.fillText("HELLO", canvas.width/2 - flippyCtx.measureText("HELLO").width / 2, startY);
+    }
+    else {
+        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+    }
 }
 
 function createStream() {
@@ -527,7 +558,7 @@ function render() {
         for (var i = 1; i < positionHistory.length; i++) {
             drawLine(positionHistory[i].x, positionHistory[i].y);
         }
-        flippyCtx.strokeStyle = "#00c6ff";
+        flippyCtx.strokeStyle = "#000";
         flippyCtx.lineWidth = 5;
         flippyCtx.stroke();
         flippyCtx.closePath();
@@ -732,10 +763,16 @@ function hasDwnObst(element, index, array) {
 
 // Draw Flippy game title
 function drawName() {
-    flippyCtx.font = "400 150px Indie Flower";
-    flippyCtx.fillStyle = "#00c6ff";
+    var fontSize = canvas.width/10;
+    var titleFont = "400 " + fontSize + "px " + "Indie Flower";
+    flippyCtx.font = titleFont;
+    flippyCtx.fillStyle = "#000";
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = fontSize/7.5;
+    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
     var titleWidth = canvas.width / 2 - flippyCtx.measureText("Flippy!").width / 2;
-    flippyCtx.fillText("Flippy!", titleWidth, 200);
+    flippyCtx.fillText("Flippy!", titleWidth, canvas.height/3.9);
 }
 
 // Draw controls reference on side once game has started
@@ -759,7 +796,7 @@ function drawSpace(x) {
 // Draw moon in background
 function drawMoon(moon_x, moon_y) {
     
-    // No shadow for moon
+    // White shadow for moon
     flippyCtx.shadowOffsetX = 0;
     flippyCtx.shadowOffsetY = 0;
     flippyCtx.shadowBlur = 0;
@@ -779,7 +816,7 @@ function drawMoon(moon_x, moon_y) {
 //Draw sun in background
 function drawSun(sun_x, sun_y) {
     
-    // No shadow for sun
+    // Yellow shadow for sun
     flippyCtx.shadowOffsetX = 0;
     flippyCtx.shadowOffsetY = 0;
     flippyCtx.shadowBlur = 20;
@@ -858,7 +895,12 @@ function drawClouds(x1, x2, x3, x4) {
 
 function drawTimer() {
     var timerWidth = canvas.width / 2 - 50;
-    var timerHeight = 350;
+    if(window.innerHeight > window.innerWidth){
+        var timerHeight = canvas.height/3;
+    }
+    else {
+        timerHeight = canvas.height/2.2;
+    }
     timer.msCounter = 0;
     secElapsed = 0;
     timer.secCounter = 0;
@@ -875,8 +917,20 @@ function drawTimer() {
     calcScore(msElapsed);
     
     // Style the font and draw the min, sec, and ms counter (the sec and ms counters that restart, not the universal ones)
-    flippyCtx.font = "400 40px Indie Flower";
     flippyCtx.fillStyle = "#fff";
+    flippyCtx.shadowOffsetX = 0;
+    flippyCtx.shadowOffsetY = 0;
+    flippyCtx.shadowBlur = 20;
+    flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
+    
+    if (onMobile) {
+        flippyCtx.font = "400 30px Indie Flower";
+        timerWidth = canvas.width / 2 - 40;
+    }
+    else {
+        flippyCtx.font = "400 40px Indie Flower";
+    }
+    
     flippyCtx.fillText(timer.minElapsed + " m", timerWidth - 100, timerHeight);
     flippyCtx.fillText(timer.secCounter + " s", timerWidth, timerHeight);
     flippyCtx.fillText(timer.msCounter, timerWidth + 90, timerHeight);
@@ -895,11 +949,11 @@ function createChar() {
     // If up is pressed, draw rightside up img
     if (upKeydown === true) {
         if (isRunning) {
-            drawTail(charImg, position.cat_x, 480); // Draw cat's tail
-            tailPosHistory.push({x:position.cat_x, y:480}); // Save tail position
+            drawTail(charImg, position.cat_x, BASE_POS - 22); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:BASE_POS - 22}); // Save tail position
             // Draw rightside up cat above the line
             crop.y = 0;
-            drawCat(charImg, position.cat_x, 480);
+            drawCat(charImg, position.cat_x, BASE_POS - 22);
             lastKeydown = "up"; // Set last position as up
         }
         upKeydown = false; // Reset keydown event listener variable
@@ -907,11 +961,11 @@ function createChar() {
     // If down is pressed, draw upside down img
     else if (downKeydown === true) {
         if (isRunning) {
-            drawTail(charImg, position.cat_x, 500); // Draw tail of cat
-            tailPosHistory.push({x:position.cat_x, y:500}); // Save tail's position
+            drawTail(charImg, position.cat_x, BASE_POS + 4); // Draw tail of cat
+            tailPosHistory.push({x:position.cat_x, y:BASE_POS + 4}); // Save tail's position
             // Draw upside down cat below the line
             crop.y = 60;
-            drawCat(charImg, position.cat_x, 500);
+            drawCat(charImg, position.cat_x, BASE_POS + 4);
             lastKeydown = "down"; // Set last position as down
         }
         downKeydown = false; // Reset keydown event listener variable
@@ -921,19 +975,19 @@ function createChar() {
     else {
         // If img was previously in the up position, draw img in up position
         if (lastKeydown == "up") {
-            drawTail(charImg, position.cat_x, 480); // Draw cat's tail
-            tailPosHistory.push({x:position.cat_x, y:480}); // Save tail position
+            drawTail(charImg, position.cat_x, BASE_POS - 22); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:BASE_POS - 22}); // Save tail position
             // Draw cat rightside up above the line
             crop.y = 0;
-            drawCat(charImg, position.cat_x, 480);
+            drawCat(charImg, position.cat_x, BASE_POS - 22);
         }
         // If img was previously in the down position, draw img in down position
         else if (lastKeydown == "down") {
-            drawTail(charImg, position.cat_x, 500); // Draw cat's tail
-            tailPosHistory.push({x:position.cat_x, y:500}); // Save tail position
+            drawTail(charImg, position.cat_x, BASE_POS + 4); // Draw cat's tail
+            tailPosHistory.push({x:position.cat_x, y:BASE_POS + 4}); // Save tail position
             // Draw upside down cat below the line
             crop.y = 60;
-            drawCat(charImg, position.cat_x, 500);
+            drawCat(charImg, position.cat_x, BASE_POS + 4);
         }
     }
 }
@@ -974,20 +1028,23 @@ function loadGameOver() {
     flippyCtx.font = "400 80px Indie Flower";
     flippyCtx.fillStyle = "#fff";
     flippyCtx.fillText("Retry?", RETRY_X, RETRY_Y);
-    // Draw Submit Score option
+    // Draw Submit Score option w/ black shadow
     flippyCtx.shadowOffsetX = 0;
     flippyCtx.shadowOffsetY = 0;
-    flippyCtx.shadowBlur = 0;
+    flippyCtx.shadowBlur = 10;
+    flippyCtx.shadowColor = "rgba(0,0,0,0.5)";
     SCORE_Y = 580;
     SCORE_X = canvas.width / 2 - flippyCtx.measureText("Submit Score").width + 30;
     flippyCtx.font = "800 60px Indie Flower";
     flippyCtx.fillStyle = "#df1e1e";
     flippyCtx.fillText("SUBMIT SCORE", SCORE_X, SCORE_Y);
-    // Draw view Leaderboard option
+    // Draw view Leaderboard option w/ black shadow
     var LEADER_X = canvas.width / 2 + 30;
     flippyCtx.font = "800 60px Indie Flower";
     flippyCtx.fillStyle = "#ffde2b";
     flippyCtx.fillText("LEADERBOARD", LEADER_X, SCORE_Y);
+    // Reset shadow
+    flippyCtx.shadowColor = "rgba(0,0,0,0)";
     submitScoreviewLeaderboard();
     // Cue Flippy Lose audio clip
     loseAudio.play();
@@ -1002,26 +1059,17 @@ function loadRetry() {
                 mouse_retry_y = event.pageY;
             }
             
-        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2;
-        RETRY_WIDTH = flippyCtx.measureText("Retry?").width;  
+        RETRY_X = canvas.width / 2 - flippyCtx.measureText("Retry?").width / 2 - 20;
+        RETRY_WIDTH = flippyCtx.measureText("Retry?").width + 60;  
             
         // If mouse is over retry area and game is over:    
         if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
             // Change the cursor into a pointer
-            document.body.style.cursor = "pointer";
-            onLink = true;
-        }
-        // If not over the retry area, cursor is normal
-        else {
-            onLink = false;
-        }
-        
-        if (!onLink) {
-            document.body.style.cursor = "";
+            $("body").css("cursor","pointer");
         }
     });
     
-    $(document).click(function(ev) { // Check if player has clicked
+    $(document).on("click tap", function(ev) { // Check if player has clicked
 
         // Is the mouse over retry area  while game is over (and user has clicked)?
         if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
@@ -1136,19 +1184,14 @@ function submitScoreviewLeaderboard() {
         LEADER_WIDTH = flippyCtx.measureText("LEADERBOARD").width;
             
         // If mouse is over submit score area or leaderboard area:    
-        if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+        if ((mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") || 
+            (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes")) {
             // Change the cursor into a pointer
-            document.body.style.cursor = "pointer";
-            onLink = true;
+            $("body").css("cursor","pointer");
         }
-        else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
-            // Change the cursor into a pointer
-            document.body.style.cursor = "pointer";
-            onLink = true;
-        }
-        // If not over the clickable area, cursor is normal
+        // If not over the clickable areas, cursor is normal
         else {
-            onLink = false;
+            $("body").css("cursor","");
         }
     });
     
@@ -1157,7 +1200,7 @@ function submitScoreviewLeaderboard() {
         return !reg.test(a);
     }
     
-    $(document).click(function(ev) { // Check if player has clicked
+    $(document).on("click tap", function(ev) { // Check if player has clicked
 
         // Is the mouse over submit score link while game is over (and user has clicked)?
         if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
@@ -1173,7 +1216,7 @@ function submitScoreviewLeaderboard() {
         }
         
         // Check if user submitted form
-        $("#submit").click(function(event){
+        $("#submit").on("click tap", function(event){
             submitted = true;
         });
         
@@ -1257,13 +1300,27 @@ function promptSecret() {
 }
 
 window.onload = function() {
-    var load_screen = document.getElementById("load_screen");
-	document.body.removeChild(load_screen); // Remove loading screen once everything is loaded
-	score_form = $("#score_form");
-	score_form.hide();
-	leaderboard = $("#leaderboard");
-	leaderboard.hide();
-	init();
+    
+    // If on mobile device, check that jQuery Mobile has finished loading before running game
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        onMobile = true;
+        if (mobileload) {
+        var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
+        score_form = $("#score_form");
+        score_form.hide();
+        leaderboard = $("#leaderboard");
+        leaderboard.hide();
+        init();
+        }
+    }
+    else {
+        var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
+        score_form = $("#score_form");
+        score_form.hide();
+        leaderboard = $("#leaderboard");
+        leaderboard.hide();
+        init();
+    }
 };
 
 
@@ -1272,14 +1329,10 @@ window.onload = function() {
 ---Write calibrate function
 ---Add audio capabilities
 ---Make mobile compatible
--x-Make database & leaderboard screen
-    ---Make cursor pointer for links
-    -x-BUG: links run multiple times after restarting, alphanumeric check doesn't work
-    -x-Create leaderboard element
-        -x- Format leaderboard entries
--x-Use spritesheet
-    -x-Draw character with spritesheet
-    -x-Draw trail with spritesheet
-    ---Exclude drawing trails off screen
----Change all to jQuery
+    ---Change all absolute measurements to relative to screen sizes
+-x-Make cursor pointer for links
+-x-Change text and line colors
+---Test database, form and leaderboard functionalities
+---Exclude drawing trails off screen
+-x-Change all to jQuery
 */

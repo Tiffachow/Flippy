@@ -81,13 +81,14 @@ canvas {
 }
 
 h1 {
+    text-align: center;
     padding-top: 40px;
     font-weight: 800;
     font-size: 50px;
 }
 
 h2 {
-    word-spacing: 160px;
+    word-spacing: 30px;
     padding: 10px;
 }
 
