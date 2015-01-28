@@ -1,6 +1,6 @@
 # Flippy
 
-### Flippy: a responsive/mobile-capable web app game created with HTML5 Canvas and Javascript and jQuery (and jQueryMobile) libraries. It is pitch-controlled and completely rendered with Canvas as well as integrates JavaScript’s Web Audio API and AJAX, MySQL, node.js and express.js on the server-side.
+### A responsive/mobile-capable web app game created with HTML5 Canvas and Javascript and jQuery (and jQueryMobile) libraries. It is pitch-controlled and completely rendered with Canvas as well as integrates JavaScript’s Web Audio API and AJAX, MySQL, node.js and express.js on the server-side.
 
 #### Play at: heartso.me/projects/flippy.html
 
