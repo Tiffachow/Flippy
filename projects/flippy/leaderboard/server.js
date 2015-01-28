@@ -7,14 +7,10 @@ var express = require('express'),
     multer = require('multer'); 
 
 var connection = mysql.createConnection({
-//   host     : 'localhost',
-//   user     : 'tiffachow',
-//   password : 'scoresdatabase',
-//  database : 'scores'
-    host     : process.env.IP,
-    user     : process.env.C9_USER,
-    password : '',
-    database: "c9"
+    host     : 'localhost',
+    user     : 'tiffachow',
+    password : 'scoresdatabase',
+    database : 'scores'
 });
 
 var app = express();
@@ -69,12 +65,3 @@ var server = app.listen(3000, function () {
   console.log('Example app listening at http://%s:%s', host, port);
 
 });
-
-// connection.connect();
-    
-// connection.query("SELECT * FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
-//     if (err) throw err;
-//     console.log(rows);
-// });
-
-// connection.end();

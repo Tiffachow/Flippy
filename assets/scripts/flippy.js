@@ -230,7 +230,7 @@ function init() {
     if (onMobile) {
         
         $(document).on("tap", startMobileGame);
-        // $(document).on("tap", pauseOnMobile);
+        $(document).on("tap", pauseOnMobile);
     }
 
 
@@ -1362,7 +1362,7 @@ function pauseOnMobile() {
     //  });
 
     // Is the mouse over pause link while game is running (and user has tapped)?
-    if (mouse_score_x >= PAUSE_X && mouse_score_x <= (PAUSE_X + pauseWidth) && mouse_score_y <= PAUSE_Y && mouse_score_y >= (PAUSE_Y - PAUSE_HEIGHT) && onMobile) {
+    if (mouse_score_x >= PAUSE_X && mouse_score_x <= (PAUSE_X + pauseWidth) && mouse_score_y <= PAUSE_Y && mouse_score_y >= (PAUSE_Y - PAUSE_HEIGHT)) {
         
         // Pause/unpause the game
         pauseGame();
