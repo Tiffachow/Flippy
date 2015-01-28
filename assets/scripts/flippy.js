@@ -88,14 +88,10 @@ var isReverse = [false, false, false, false];
 
 // Character object variables
 var charImg = new Image();
-// var charImgR = new Image();
 charImg.src = "/assets/images/flippy/nyan_cat_sprite.png";
 charImg.width = 175;
 charImg.height = 80;
 var crop = {x:0, y:0};
-// charImgR.src = "/assets/images/flippy/char-cat-r.png";
-// charImgR.width = 35;
-// charImgR.height = 34;
 
 // createCharacter function variables
 var upKeydown = false;
@@ -227,12 +223,19 @@ function init() {
         flippyCtx = canvas.getContext("2d");
     }
 
-    if (onMobile) {
-        
-        $(document).on("tap", startMobileGame);
-        $(document).on("tap", pauseOnMobile);
-    }
-
+    $(function() {
+        if (onMobile) {
+            $(document).on("tap", function(){
+                if (isGameBegin) {
+                    startMobileGame();
+                }
+                else {
+                    pauseOnMobile();
+                }
+            });
+            // $(document).on("tap", pauseOnMobile);
+        }
+    });
 
     // Set variables to listen for tap, enter, up, down and spacebar keydowns
     $(document).on("keydown", function(event) {
@@ -348,6 +351,7 @@ function startMobileGame() {
     createStream();
     render();
     $(document).off("tap", startMobileGame);
+    isGameBegin = false;
 }
 
 // Wrap text to get paragraph form
