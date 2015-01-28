@@ -227,104 +227,105 @@ function init() {
         flippyCtx = canvas.getContext("2d");
     }
 
-    // Set variables to listen for enter, up, down and spacebar keydowns
-    $(document).on("keydown tap", function(event) {
-        if(onMobile) {
-            createStream();
-            render();
-            $(this).off("tap");
-        }
-        else {
-            switch (event.keyCode) {
-                // Enter key will enable player to trigger instructions, calibration, and start the game
-                case 13:
-                    enterKeydown.push(true);
-                    if (isGameBegin) {
-                        if (enterKeydown[0]) {
-                            text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
-                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                            enterKeydown[0] = false;
-                        }
-                        if (enterKeydown[1]) {
-                            text = "Calibration Time!";
-                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                            enterKeydown[1] = false;
-                        }
-                        if (enterKeydown[2]) {
-                            text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
-                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                            enterKeydown[2] = false;
-                        }
-                        if (enterKeydown[3]) {
-                            createStream();
-                            enterKeydown[3] = false;
-                        }
-                        if (enterKeydown[4]) {
-                            flippyCtx.font = "400 50px Indie Flower";
-                            text = "Get Ready...    ENTER/tap to START!";
-                            wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                            enterKeydown[4] = false;
-                        }
-                        if (enterKeydown[5]) {
-                            // start game
-                            render();
-                            enterKeydown[5] = false;
-                        }
+    if (onMobile) {
+        
+        $(document).on("tap", startMobileGame);
+        // $(document).on("tap", pauseOnMobile);
+    }
+
+
+    // Set variables to listen for tap, enter, up, down and spacebar keydowns
+    $(document).on("keydown", function(event) {
+        
+        switch (event.keyCode) {
+            // Enter key will enable player to trigger instructions, calibration, and start the game
+            case 13:
+                enterKeydown.push(true);
+                if (isGameBegin) {
+                    if (enterKeydown[0]) {
+                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[0] = false;
                     }
-                    break;
-                // UP & DWN keys will trigger character flipping
-                case 38:
-                    upKeydown = true;
-                    break;
-                case 40:
-                    downKeydown = true;
-                    break;
-                // Set spacebar to pause and resume game
-                case 32:
-                    pauseGame();
-                    break;
-                // Secret
-                case 70:
-                    if (float[0] === false) { 
-                        float[0] = true;
+                    if (enterKeydown[1]) {
+                        text = "Calibration Time!";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[1] = false;
                     }
-                    else {
-                        float[0] = false;
+                    if (enterKeydown[2]) {
+                        text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[2] = false;
                     }
-                    break;
-                case 76:
-                    if (float[1] === false) { 
-                        float[1] = true;
+                    if (enterKeydown[3]) {
+                        createStream();
+                        enterKeydown[3] = false;
                     }
-                    else {
-                        float[1] = false;
+                    if (enterKeydown[4]) {
+                        flippyCtx.font = "400 50px Indie Flower";
+                        text = "Get Ready...    ENTER/tap to START!";
+                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                        enterKeydown[4] = false;
                     }
-                    break;
-                case 79:
-                    if (float[2] === false) { 
-                        float[2] = true;
+                    if (enterKeydown[5]) {
+                        // start game
+                        render();
+                        enterKeydown[5] = false;
                     }
-                    else {
-                        float[2] = false;
-                    }
-                    break;
-                case 65:
-                    if (float[3] === false) { 
-                        float[3] = true;
-                    }
-                    else {
-                        float[3] = false;
-                    }
-                    break;
-                case 84:
-                    if (float[4] === false) { 
-                        float[4] = true;
-                    }
-                    else {
-                        float[4] = false;
-                    }
-                    break;
-            }
+                }
+                break;
+            // UP & DWN keys will trigger character flipping
+            case 38:
+                upKeydown = true;
+                break;
+            case 40:
+                downKeydown = true;
+                break;
+            // Set spacebar to pause and resume game
+            case 32:
+                pauseGame();
+                break;
+            // Secret
+            case 70:
+                if (float[0] === false) { 
+                    float[0] = true;
+                }
+                else {
+                    float[0] = false;
+                }
+                break;
+            case 76:
+                if (float[1] === false) { 
+                    float[1] = true;
+                }
+                else {
+                    float[1] = false;
+                }
+                break;
+            case 79:
+                if (float[2] === false) { 
+                    float[2] = true;
+                }
+                else {
+                    float[2] = false;
+                }
+                break;
+            case 65:
+                if (float[3] === false) { 
+                    float[3] = true;
+                }
+                else {
+                    float[3] = false;
+                }
+                break;
+            case 84:
+                if (float[4] === false) { 
+                    float[4] = true;
+                }
+                else {
+                    float[4] = false;
+                }
+                break;
         }
     });
     
@@ -341,6 +342,12 @@ function init() {
             startGame();
         }
     });
+}
+
+function startMobileGame() {
+    createStream();
+    render();
+    $(document).off("tap", startMobileGame);
 }
 
 // Wrap text to get paragraph form
@@ -398,7 +405,7 @@ function startGame() {
         flippyCtx.shadowOffsetY = 0;
         flippyCtx.shadowBlur = fontSize/7.5;
         flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
-        flippyCtx.fillText("HELLO", canvas.width/2 - flippyCtx.measureText("HELLO").width / 2, startY);
+        flippyCtx.fillText("TAP", canvas.width/2 - flippyCtx.measureText("TAP").width / 2, startY);
     }
     else {
         wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
@@ -549,7 +556,7 @@ function render() {
         cloudPos.x[3]
     );
     drawName();
-    drawControls();
+    drawPause();
 
     // Redraw all the previous lines
     if (positionHistory.length > 0) {
@@ -773,13 +780,6 @@ function drawName() {
     flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
     var titleWidth = canvas.width / 2 - flippyCtx.measureText("Flippy!").width / 2;
     flippyCtx.fillText("Flippy!", titleWidth, canvas.height/3.9);
-}
-
-// Draw controls reference on side once game has started
-function drawControls() {
-    flippyCtx.font = "400 20px Indie Flower";
-    flippyCtx.fillStyle = "#fff";
-    flippyCtx.fillText("SPACE = pause", 25, 40);
 }
 
 // Draw space background
@@ -1278,6 +1278,14 @@ function submitScoreviewLeaderboard() {
         
         // If leaderboard link is clicked...
         else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            
+            if (onMobile) {
+                leaderboard.css({
+                    width: "80%",
+                    top: "35%",
+                    left: "calc((20% - 20px)/2)"
+                });
+            }
             leaderboard.show();
             score_form.hide();
         
@@ -1306,6 +1314,18 @@ function submitScoreviewLeaderboard() {
     });
 }
 
+// Draw pause control reference on side once game has started
+function drawPause() {
+    flippyCtx.font = "400 20px Indie Flower";
+    flippyCtx.fillStyle = "#fff";
+    if (onMobile) {
+        flippyCtx.fillText("pause", 25, 40);
+    }
+    else {
+        flippyCtx.fillText("SPACE = pause", 25, 40);
+    }
+}
+
 function pauseGame() { // Once spacebar is pressed...
     // Check if game is over
     if (intersectsChar() === false) {
@@ -1326,6 +1346,29 @@ function pauseGame() { // Once spacebar is pressed...
     }
 }
 
+function pauseOnMobile() {
+    var PAUSE_X = 0;
+    var PAUSE_Y = 0;
+    var pauseWidth = flippyCtx.measureText("pause").width * 2;
+    var PAUSE_HEIGHT = 80 * 2;
+    
+    //  $(document).mousemove(function(event) {
+    //     // Get the mouse position relative to the canvas element.
+    //         if (event.pageX) {
+    //             mouse_score_x = event.pageX;
+    //             mouse_score_y = event.pageY;
+    //         }
+         
+    //  });
+
+    // Is the mouse over pause link while game is running (and user has tapped)?
+    if (mouse_score_x >= PAUSE_X && mouse_score_x <= (PAUSE_X + pauseWidth) && mouse_score_y <= PAUSE_Y && mouse_score_y >= (PAUSE_Y - PAUSE_HEIGHT) && onMobile) {
+        
+        // Pause/unpause the game
+        pauseGame();
+    }
+}
+
 // Once float keys are triggered, ask player for password
 function promptSecret() {
     secret = prompt("Pssst, password please!");
@@ -1337,12 +1380,12 @@ window.onload = function() {
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         onMobile = true;
         if (mobileload) {
-        var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
-        score_form = $("#score_form");
-        score_form.hide();
-        leaderboard = $("#leaderboard");
-        leaderboard.hide();
-        init();
+            var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
+            score_form = $("#score_form");
+            score_form.hide();
+            leaderboard = $("#leaderboard");
+            leaderboard.hide();
+            init();
         }
     }
     else {
@@ -1362,6 +1405,7 @@ window.onload = function() {
 ---Add audio capabilities
 ---Make mobile compatible
     ---Change all absolute measurements to relative to screen sizes
+    ---Add mobile events
 ---Test database, form and leaderboard functionalities
 ---Exclude drawing trails off screen
 */

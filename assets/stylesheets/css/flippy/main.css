@@ -65,10 +65,10 @@ canvas {
 #leaderboard {
     z-index: 1;
     width: 33%;
-    height: 330px;
+    height: 42%;
     position: absolute;
-    top: 275px;
-    left: 33.5%;
+    top: 35%;
+    left: calc((67% - 20px)/2);
     border-radius: 15px;
     border: 10px solid #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.7);
