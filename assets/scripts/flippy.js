@@ -1,5 +1,5 @@
 var onMobile = false;
-var WebFont, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
+var WebFont, load_screen, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
 var float = [false, false, false, false, false];
@@ -223,6 +223,7 @@ function init() {
         flippyCtx = canvas.getContext("2d");
     }
 
+    //TODO
     $(function() {
         if (onMobile) {
             $(document).on("tap", function(){
@@ -347,6 +348,7 @@ function init() {
     });
 }
 
+//TODO
 function startMobileGame() {
     createStream();
     render();
@@ -642,6 +644,7 @@ function render() {
         positionHistory.shift();
     }
     
+    //TODO
     // // Exclude out of view tails from being drawn
     // while (tailPosHistory[1].x < view.left_x) {
     //     tailPosHistory.shift();
@@ -1229,6 +1232,11 @@ function submitScoreviewLeaderboard() {
         return !reg.test(a);
     }
     
+    //TODO
+    score_form.not().click(function() {
+        score_form.hide();  
+    });
+    
     $(document).on("click tap", function(ev) { // Check if player has clicked
 
         // Is the mouse over submit score link while game is over (and user has clicked)?
@@ -1278,6 +1286,7 @@ function submitScoreviewLeaderboard() {
             else {
                 alert("Letters, numbers, and space only!");
             }
+            
         }
         
         // If leaderboard link is clicked...
@@ -1350,7 +1359,7 @@ function pauseGame() { // Once spacebar is pressed...
     }
 }
 
-function pauseOnMobile() {
+function pauseOnMobile() { //TODO
     var PAUSE_X = 0;
     var PAUSE_Y = 0;
     var pauseWidth = flippyCtx.measureText("pause").width * 2;
@@ -1384,7 +1393,7 @@ window.onload = function() {
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         onMobile = true;
         if (mobileload) {
-            var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
+            transitionLoad(); // Remove loading screen once everything is loaded
             score_form = $("#score_form");
             score_form.hide();
             leaderboard = $("#leaderboard");
@@ -1393,7 +1402,7 @@ window.onload = function() {
         }
     }
     else {
-        var load_screen = $("#load_screen").remove(); // Remove loading screen once everything is loaded
+        transitionLoad(); // Remove loading screen once everything is loaded
         score_form = $("#score_form");
         score_form.hide();
         leaderboard = $("#leaderboard");
@@ -1402,14 +1411,33 @@ window.onload = function() {
     }
 };
 
+function transitionLoad() {
+    load_screen = $("#load_screen, #load_screen div");
+    load_screen.css({
+        transition: "height 1s ease-in-out, color 1s ease-in-out",
+        height: "0",
+        color: "transparent"
+    });
+    setTimeout(removeLoad, 1000);
+}
+
+function removeLoad() {
+    load_screen.remove(); // Remove loading screen once everything is loaded
+}
+
 
 //TODO:
 /*
 ---Write calibrate function
 ---Add audio capabilities
 ---Make mobile compatible
-    ---Change all absolute measurements to relative to screen sizes
+    -x-Change all absolute measurements to relative to screen sizes
     ---Add mobile events
+        ---Start game on tap, pause on tap
+    ---Fix ugly loading screen on mobile
 ---Test database, form and leaderboard functionalities
 ---Exclude drawing trails off screen
+---BUG: submits score twice
+---Close form/leaderboard when clicked outside of those elements
+
 */
