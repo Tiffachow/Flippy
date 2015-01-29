@@ -58,9 +58,29 @@ canvas {
     text-shadow: 0 0 10px rgba(0,0,0,0.7);
     background: #df1e1e;
     color: #fff;
-    font: 400 20px/1em "Indie Flower", Arial, sans-serif;
+    font: 800 20px/1em "Indie Flower", Arial, sans-serif;
     text-align: center;
 }
+
+#submit {
+    position: relative;
+    width: 30%;
+    line-height: 1em;
+    height: calc(100%+10px);
+    padding: 5px;
+    left: calc(35%);
+    background: transparent;
+    border: 1px solid #fff;
+    border-radius: 15px;
+    transition: background 500ms ease-in-out, color 500ms ease-in-out;
+}
+
+#submit:hover {
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+}
+    
 
 #leaderboard {
     z-index: 1;
