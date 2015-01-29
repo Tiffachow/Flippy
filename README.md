@@ -11,5 +11,5 @@
 ![Mobile](/assets/images/flippy/screenshots/1.png "On Mobile") ![Loading Screen](/assets/images/flippy/screenshots/2.png "Loading Screen")
 ![Game Begins](/assets/images/flippy/screenshots/3.png "Game Begins!") ![](/assets/images/flippy/screenshots/4.png)
 ![](/assets/images/flippy/screenshots/5.png) ![](/assets/images/flippy/screenshots/6.png)
-![Game Over](/assets/images/flippy/screenshots/7.png "Game Over :<") ![Submit Score](/assets/images/flippy/screenshots/8.png "Submit Score Screen")
+![Game Over](/assets/images/flippy/screenshots/7.png "Game Over :<") ![Submit Score](/assets/images/flippy/screenshots/8_.png "Submit Score Screen")
 ![Leaderboard](/assets/images/flippy/screenshots/9.png "Leaderboard") ![](/assets/images/flippy/screenshots/10.png)
