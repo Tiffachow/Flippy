@@ -44,28 +44,51 @@ Sun, moon and clouds are free vectors from dryicons.com and vecteezy.com:
 
 <body>
   <audio src="assets/audio/flippy.mp3"></audio>
-  <audio src="assets/audio/flippy_lose.mp3"></audio>
-  <div id="load_screen">
-    <div id="load_text">Flippy Loading</div>
-    <div id="load_cat"><img src="assets/images/flippy/cat.png"></div>
+  <audio src="assets/audio/flippy-lose.mp3"></audio>
+  <div id="load-screen">
+    <div id="load-text">Flippy Loading</div>
+    <div id="load-cat"><img src="assets/images/flippy/cat.png"></div>
   </div>
   <div class="github-fork-ribbon-wrapper right">
     <div class="github-fork-ribbon">
       <a href="https://github.com/Tiffachow/Flippy">Fork me on GitHub</a>
     </div>
   </div>
-  <div class="control_menu">
-    <h2>Choose your controls: </h2>
-    <div class="option voice_option">
+  <div class="instructions">
+    <h2 class="instruct-screen" id="instruct-1">
+      AHHH One moment Flippy's munching happily on his paw, the next, he's in this strange place??? Help Flippy avoid the mystery walls with his flippying powers!
+      <br><br>USE YOUR VOICE to flip Flippy! <br> Or, UP and DOWN keys to flip (booo boringgg)
+    </h2>
+    <h2 class="instruct-screen" id="instruct-2-key">
+      <br><br> Meh. If you really wanna... <br><br> Use up/down keys to flip Flippy(, loser).
+    </h2>
+    <h2 class="instruct-screen" id="instruct-2-voice">
+      <br> Good Choice! You will be using your voice to control Flippy. <br><br> We need to do a calibration... It won't hurt, promise.
+    </h2>
+    <h2 class="instruct-screen" id="instruct-3-voice">
+      <br><br>On the next screen, make a sound at the pitch you would like to be the default. <br><br> Not too high or too low!
+    </h2>
+    <h2 class="instruct-screen" id="instruct-4-voice">
+      <br><br><br>Try to keep your voice at the same pitch. <br> Keep going 'til you reach 100! <br> 
+    </h2>
+    <h2 class="instruct-screen" id="instruct-5">
+      <br><br><br><br>Get Ready...
+    </h2>
+    <h1 id="continue-prompt">ENTER to Continue</h1>
+  </div>
+  <div class="control-menu">
+    <h2>Choose your controls (wisely) : </h2>
+    <div class="option voice-option">
       <h1>VOICE</h1>
     </div>
-    <div class="option keyboard_option">
+    <div class="option keyboard-option">
       <h1>KEYBOARD</h1>
     </div>
+    <h3>Hint: You can toggle controls later ingame.</h3>
   </div>
-  <div id="score_form">
+  <div id="score-form">
     <br>
-    <div id="score_detail"></div>
+    <div id="score-detail"></div>
     <form>
       <br>
       Your alias : <input type="text" id="alias" value="FLIPPY" maxlength="30" required>
@@ -76,7 +99,7 @@ Sun, moon and clouds are free vectors from dryicons.com and vecteezy.com:
   <div id="leaderboard">
     <h1>TOP SCORES</h1><br>
     <h2>ALIAS SCORE</h2><br>
-    <div id="top_entries"></div>`
+    <div id="top-entries"></div>
   </div>
   <canvas id='canvas'>
     <h1>Your browser does not support Canvas. <br> Update or use another browser if you wanna play this awesome game!</h1>

@@ -1,5 +1,5 @@
 var onMobile = false;
-var WebFont, load_screen, control_menu, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
+var WebFont, load_screen, instructions, control_menu, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
 var float = [false, false, false, false, false];
@@ -269,60 +269,69 @@ function allEventsHandler(event) {
     switch (event.keyCode) {
         // Enter key will enable player to trigger instructions, calibration, and start the game
         case 13:
-            if ((enterKeydown.length < 4) || ((enterKeydown.length >= 4) && doneCalibrating)) {
+            if ((enterKeydown.length < 3) || ((enterKeydown.length >= 3) && doneCalibrating)) {
                 enterKeydown.push(true);
             }
             if (isGameBegin) {
+                
                 if (enterKeydown[0]) {
+                    $("#instruct-1").hide();
                     askControls();
-                    if (!!$(".voice_option").attr('id')) {
-                        usingVoice = true;
-                        usingKeyboard = false;
-                    }
-                    else if (!!$(".keyboard_option").attr('id')) {
-                        usingKeyboard = true;
-                        usingVoice = false;
-                    }
-                    text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
-                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
                     enterKeydown[0] = false;
                 }
-                if (enterKeydown[1]) {
-                    text = "Calibration Time!";
-                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                    enterKeydown[1] = false;
+                
+                if (usingKeyboard) {
+                    
+                    if (enterKeydown[1]) {
+                        $("#instruct-2-key").hide();
+                        $("#instruct-5").show();
+                        enterKeydown[1] = false;
+                    }
+                    if (enterKeydown[2]) {
+                        $("#instruct-5").hide();
+                        instructions.hide();
+                        render();
+                        enterKeydown[2] = false;
+                    }
                 }
-                if (enterKeydown[2]) {
-                    text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
-                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                    enterKeydown[2] = false;
-                }
-                if (enterKeydown[3]) {
-                    createStream();
-                    enterKeydown[3] = false;
-                }
-                if (enterKeydown[4]) {
-                    flippyCtx.font = "400 50px Indie Flower";
-                    text = "Get Ready...    ENTER/tap to START!";
-                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                    enterKeydown[4] = false;
-                }
-                if (enterKeydown[5]) {
-                    // start game
-                    render();
-                    takeSample();
-                    enterKeydown[5] = false;
+                
+                if (usingVoice) {
+                    
+                    if (enterKeydown[1]) {
+                        $("#instruct-2-voice").hide();
+                        $("#instruct-3-voice").show();
+                        enterKeydown[1] = false;
+                    }
+                    if (enterKeydown[2]) {
+                        $("#instruct-3-voice").hide();
+                        $("#instruct-4-voice").show();
+                        createStream();
+                        enterKeydown[2] = false;
+                    }
+                    if (enterKeydown[3]) {
+                        $("#instruct-4-voice").hide();
+                        $("#instruct-5").show();
+                        enterKeydown[3] = false;
+                    }
+                    if (enterKeydown[4]) {
+                        // start game
+                        $("#instruct-5").hide();
+                        instructions.hide();
+                        render();
+                        takeSample();
+                        enterKeydown[4] = false;
+                    }
                 }
             }
             break;
         // UP & DWN keys will trigger character flipping
         case 38:
-            if (controlMethod == "keyboard") {
+            if (usingKeyboard) {
                 upTriggered = true;
             }
                 break;
         case 40:
-            if (controlMethod == "keyboard") {
+            if (usingKeyboard) {
                 downTriggered = true;
             }
             break;
@@ -417,30 +426,45 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 function askControls() {
     $(document).off("keydown", allEventsHandler);
     control_menu.show();
-    $(".voice_option").attr("id", "selected_control");
+    $(".voice-option").attr("id", "selected-control");
     $(document).on("keydown", chooseControlOption);
     
     $(".option").on("click", function(){
-        $(this).attr("id", "selected_control");
+        $(this).attr("id", "selected-control");
         $(".option").not(this).removeAttr("id");
         control_menu.hide();
         $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
+        setControls();
     });
+}
+
+function setControls() {
+    if (!!$(".voice-option").attr('id')) {
+        usingVoice = true;
+        usingKeyboard = false;
+        $("#instruct-2-voice").show();
+    }
+    else if (!!$(".keyboard-option").attr('id')) {
+        usingKeyboard = true;
+        usingVoice = false;
+        $("#instruct-2-key").show();
+    }
 }
 
 function chooseControlOption(event) {
     switch (event.keyCode) {
         case 38: // go up to select
-            $(".voice_option:not(:has(#selected_control))").attr("id", "selected_control");
-            $(".keyboard_option").removeAttr("id");
+            $(".voice-option:not(:has(#selected-control))").attr("id", "selected-control");
+            $(".keyboard-option").removeAttr("id");
             break;
         case 40: // go down to select
-            $(".keyboard_option:not(:has(#selected_control))").attr("id", "selected_control");
-            $(".voice_option").removeAttr("id");
+            $(".keyboard-option:not(:has(#selected-control))").attr("id", "selected-control");
+            $(".voice-option").removeAttr("id");
             break;
         case 13:  
             control_menu.hide();
             $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
+            setControls();
             break;
     }
 }
@@ -448,30 +472,33 @@ function chooseControlOption(event) {
 // Start the first instructions and set initial properties
 function startGame() {
     isGameBegin = true;
-    flippyCtx.font = "100 20px Indie Flower";
-    flippyCtx.fillStyle = "#000";
-    flippyCtx.shadowOffsetX = 0;
-    flippyCtx.shadowOffsetY = 0;
-    flippyCtx.shadowBlur = 20;
-    flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
-    maxWidth = canvas.width / 3;
-    lineHeight = 65;
-    startX = canvas.width / 2 - canvas.width / 6 + 15;
-    startY = canvas.height/1.9;
-    text = "Available Controls: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
+    // flippyCtx.font = "100 20px Indie Flower";
+    // flippyCtx.fillStyle = "#000";
+    // flippyCtx.shadowOffsetX = 0;
+    // flippyCtx.shadowOffsetY = 0;
+    // flippyCtx.shadowBlur = 20;
+    // flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
+    // maxWidth = canvas.width / 3;
+    // lineHeight = 65;
+    // startX = canvas.width / 2 - canvas.width / 6 + 15;
+    // startY = canvas.height/1.9;
+    // text = "Available Controls: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
     if(onMobile) {
-        var fontSize = canvas.width/10;
-        var titleFont = "400 " + fontSize + "px " + "Indie Flower";
-        flippyCtx.font = titleFont;
-        flippyCtx.fillStyle = "#fff";
-        flippyCtx.shadowOffsetX = 0;
-        flippyCtx.shadowOffsetY = 0;
-        flippyCtx.shadowBlur = fontSize/7.5;
-        flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
-        flippyCtx.fillText("TAP", canvas.width/2 - flippyCtx.measureText("TAP").width / 2, startY);
+        // var fontSize = canvas.width/10;
+        // var titleFont = "400 " + fontSize + "px " + "Indie Flower";
+        // flippyCtx.font = titleFont;
+        // flippyCtx.fillStyle = "#fff";
+        // flippyCtx.shadowOffsetX = 0;
+        // flippyCtx.shadowOffsetY = 0;
+        // flippyCtx.shadowBlur = fontSize/7.5;
+        // flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
+        // flippyCtx.fillText("TAP", canvas.width/2 - flippyCtx.measureText("TAP").width / 2, startY);
     }
     else {
-        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+        // wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+        instructions.show();
+        $(".instruct-screen").hide();
+        $("#instruct-1").show();
     }
 }
 
@@ -522,20 +549,22 @@ function createStream() {
 
 function calibrate() {
     analyser.getFloatTimeDomainData(freqDataArray);
-    var calibrateCount = (pitch.length + 1).toString();
-    flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    flippyCtx.fillStyle = "#00c6ff";
-    flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    var x = canvas.width / 2;
-    var y = canvas.height * 0.5;
-    flippyCtx.fillStyle = "#fff";
-    flippyCtx.fillText(calibrateCount, x, y);
+    var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>";
+    // flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+    // flippyCtx.fillStyle = "#00c6ff";
+    // flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+    // var x = canvas.width / 2;
+    // var y = canvas.height * 0.5;
+    // flippyCtx.fillStyle = "#fff";
+    // flippyCtx.fillText(calibrateCount, x, y);
     
     var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
     if (freq != -1){
         pitch.push(freq);
     }
-    flippyCtx.fillText(Math.floor(pitch[pitch.length - 1]) + " Hz", x, canvas.height * 0.6);
+    // flippyCtx.fillText(Math.floor(pitch[pitch.length - 1]) + " Hz", x, canvas.height * 0.6);
+    var samplePitch = Math.floor(pitch[pitch.length - 1]) + " Hz <br><br>";
+    $("#instruct-4-voice").html(calibrateCount + samplePitch);
     
     if (pitch.length < 100) {
         setTimeout(calibrate, 20);
@@ -546,12 +575,13 @@ function calibrate() {
             pitchCenter += pitch[i];
         }
         pitchCenter /= pitch.length;
-        flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-        flippyCtx.fillStyle = "#00c6ff";
-        flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+        // flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+        // flippyCtx.fillStyle = "#00c6ff";
+        // flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
         var doneCalibrateMsg = "Done Calibrating! Your pitch is :  " + Math.floor(pitchCenter) + " Hz.";
-        flippyCtx.fillStyle = "#fff";
-        flippyCtx.fillText(doneCalibrateMsg, x - flippyCtx.measureText(doneCalibrateMsg).width / 2, canvas.height * 0.6);
+        $("#instruct-4-voice").html(calibrateCount + samplePitch + doneCalibrateMsg);
+        // flippyCtx.fillStyle = "#fff";
+        // flippyCtx.fillText(doneCalibrateMsg, x - flippyCtx.measureText(doneCalibrateMsg).width / 2, canvas.height * 0.6);
         doneCalibrating = true;
     }
 }
@@ -649,15 +679,18 @@ function render() {
 
     flippyCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas every render
     
-    if (pitchSamples.length >= countofSamples) {
-        currentPitch = 0;
-        for (var i = 0; i < pitchSamples.length; i++) { // Calculate average of last 10 samples of pitch
-            currentPitch += pitchSamples[i];
+    if (usingVoice) { // If playing with voice, ...
+        
+        if (pitchSamples.length >= countofSamples) {
+            currentPitch = 0;
+            for (var i = 0; i < pitchSamples.length; i++) { // Calculate average of last 10 samples of pitch
+                currentPitch += pitchSamples[i];
+            }
+            currentPitch /= pitchSamples.length;
         }
-        currentPitch /= pitchSamples.length;
+        
+        flipCharWithStream();
     }
-    
-    flipCharWithStream();
     
     drawSpace(position.background);
     drawSun(position.sun_x, position.sun_y, position.sun_theta);
@@ -807,7 +840,13 @@ function render() {
     }
 
     if (DEBUG) { // to debug 
-        flippyCtx.fillText(currentPitch, 20, 20);
+        if (usingVoice) { // Show pitch center and current pitch of player in real time
+            var fontSize = canvas.width/60;
+            var titleFont = "400 " + fontSize + "px " + "Indie Flower";
+            flippyCtx.font = titleFont;
+            flippyCtx.fillStyle = "#fff";
+            flippyCtx.fillText("Pitch center : " + Math.floor(pitchCenter) + "   Current pitch : " + Math.floor(currentPitch), 25, 25);
+        }
     }
 
 }
@@ -1366,7 +1405,7 @@ function submitScoreviewLeaderboard() {
             
             // On form, let users know the score they're submitting
             score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
-            $("#score_detail").html(score_string);
+            $("#score-detail").html(score_string);
             
         }
         
@@ -1443,10 +1482,10 @@ function drawPause() {
     flippyCtx.font = "400 20px Indie Flower";
     flippyCtx.fillStyle = "#fff";
     if (onMobile) {
-        flippyCtx.fillText("pause", 25, 40);
+        flippyCtx.fillText("pause", 25, 45);
     }
     else {
-        flippyCtx.fillText("SPACE = pause", 25, 40);
+        flippyCtx.fillText("SPACE = pause", 25, 45);
     }
 }
 
@@ -1505,9 +1544,9 @@ window.onload = function() {
         onMobile = true;
         if (mobileload) {
             transitionLoad(); // Remove loading screen once everything is loaded
-            control_menu = $("#control_menu");
+            control_menu = $("#control-menu");
             control_menu.hide();
-            score_form = $("#score_form");
+            score_form = $("#score-form");
             score_form.hide();
             leaderboard = $("#leaderboard");
             leaderboard.hide();
@@ -1516,9 +1555,10 @@ window.onload = function() {
     }
     else {
         transitionLoad(); // Remove loading screen once everything is loaded
-        control_menu = $(".control_menu");
+        instructions = $(".instructions").hide();
+        control_menu = $(".control-menu");
         control_menu.hide();
-        score_form = $("#score_form");
+        score_form = $("#score-form");
         score_form.hide();
         leaderboard = $("#leaderboard");
         leaderboard.hide();
@@ -1527,7 +1567,7 @@ window.onload = function() {
 };
 
 function transitionLoad() {
-    load_screen = $("#load_screen, #load_screen div");
+    load_screen = $("#load-screen, #load-screen div");
     load_screen.css({
         transition: "height 1s ease-in-out, color 1s ease-in-out",
         height: "0",
@@ -1543,6 +1583,8 @@ function removeLoad() {
 
 //TODO:
 /*
+---Make "toggle controls" option
+---Make "recalibrate" option
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
     -x-Change all absolute measurements to relative to screen sizes
@@ -1553,5 +1595,5 @@ function removeLoad() {
 ---Exclude drawing trails off screen
 ---BUG: submits score twice
 ---Close form/leaderboard when clicked outside of those elements
----Revamp instructions screens: use divs instead of canvas
+-x-Revamp instructions screens: use divs instead of canvas
 */

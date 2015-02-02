@@ -13,7 +13,7 @@ canvas {
     z-index: 0;
 }
 
-#load_screen {
+#load-screen {
   position: absolute;
   z-index: 2;
   width: 100%;
@@ -21,14 +21,14 @@ canvas {
   background: #fff;
 }
 
-#load_text {
+#load-text {
     font: 400 50px/1em "Indie Flower", Arial, sans-serif;
     position: absolute;
     left: calc((100% - 278px)/2);
     top: calc(30%);
 }
 
-#load_cat {
+#load-cat {
     position: absolute;
     left: calc(50% - (100% / 32));
     top: calc(30% + 100px);
@@ -40,12 +40,26 @@ canvas {
     animation: FLIPPY-TRAJ 2s ease-in-out infinite;
 }
 
-#load_cat img {
+#load-cat img {
     width: 100%;
     height: 100%;
 }
 
-.control_menu {
+.instructions h2 {
+    font: 400 26px/1em "Indie Flower", Arial, sans-serif;
+    padding: 6%;
+}
+
+#continue-prompt {
+    font: 800 48px/1em "Indie Flower", Arial, sans-serif;
+    position: absolute;
+    left: calc(50% - 174px);
+    bottom: 5%;
+    text-shadow: 0 0 10px rgba(255,255,255,0.9);
+    color: #fff;
+}
+
+.control-menu, .instructions {
     position: absolute;
     z-index: 1;
     width: 40%;
@@ -59,9 +73,14 @@ canvas {
     text-align: center;
 }
 
-.control_menu h2 {
+.control-menu h2 {
     font: 400 40px/1em "Indie Flower", Arial, sans-serif;
     margin: 3% 0;
+}
+
+.control-menu h3 {
+    font: 400 15px/1em "Indie Flower", Arial, sans-serif;
+    margin: 2%;
 }
 
 .option {
@@ -75,13 +94,13 @@ canvas {
     transition: background 200ms ease-in-out, color 200ms ease-in-out, border 200ms ease-in-out;
 }
 
-.option:hover, #selected_control {
+.option:hover, #selected-control {
     background: #fff;
     color: #00c6ff;
     border: 5px solid #fff;
 }
 
-#score_form {
+#score-form {
     z-index: 1;
     width: 33%;
     height: 140px;
@@ -136,14 +155,14 @@ canvas {
     overflow-y: scroll;
 }
 
-.leaderboard h1 {
+#leaderboard h1 {
     text-align: center;
     padding-top: 40px;
     font-weight: 800;
     font-size: 50px;
 }
 
-h2 {
+#leaderboard h2 {
     word-spacing: 30px;
     padding: 10px;
 }

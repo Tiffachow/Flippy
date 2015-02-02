@@ -18,14 +18,16 @@
 ---
 ## TODO:
 
+* ---Make "toggle controls" option
+* ---Make "recalibrate" option
+* ---Exclude drawing trails off screen
+* ---BUG: submits score twice
+* ---Close form/leaderboard when clicked outside of those elements
 * ---Make mobile compatible
     * ---Fix ugly loading screen on mobile
     * -x-Change all absolute measurements to relative to screen sizes
     * ---Add mobile events
         * ---Start game on tap, pause on tap
-* ---Test database, form and leaderboard functionalities
 * ---Proxypass
-* ---Exclude drawing trails off screen
-* ---BUG: submits score twice
-* ---Close form/leaderboard when clicked outside of those elements
-* ---Revamp instructions screens: use divs instead of canvas
+* ---Test database, form and leaderboard functionalities
+
