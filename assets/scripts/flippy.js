@@ -28,16 +28,8 @@ var source,
 // Start Game variables
 var isGameBegin,
     enterKeydown = [],
-    controlMethod,
     usingVoice = false,
     usingKeyboard = false;
-
-// wrapText Variables
-var maxWidth;
-var lineHeight;
-var startX;
-var startY;
-var text;
 
 // Render function variables
 var BASE_POS,
@@ -264,9 +256,39 @@ function init() {
     });
 }
 
+function finishCalibration(event) {
+    if (event.keyCode == 13 && doneCalibrating) {
+        instructions.hide();
+        $("#instruct-4-voice").hide();
+        pauseGame();
+        $(document).off("keydown", finishCalibration);
+    }
+}
+
 function allEventsHandler(event) {
         
     switch (event.keyCode) {
+        
+        case 67: // Press c to toggle controls
+            if (usingVoice) { // Since already calibrated, allow toggling to voice or key controls freely
+                usingVoice = false;
+                usingKeyboard = true;
+            }
+            else if (usingKeyboard && doneCalibrating) { // If have already calibrated before, allow toggling to voice controls from keys
+                usingKeyboard = false;
+                usingVoice = true;
+            }
+            else { // If haven't calibrated before, pause and calibrate before allowing to toggle to voice controls at will
+                pauseGame();
+                instructions.show();
+                $("#instruct-4-voice").show();
+                createStream();
+                usingKeyboard = false;
+                usingVoice = true;
+                $(document).on("keydown", finishCalibration);
+            }
+        break;
+        
         // Enter key will enable player to trigger instructions, calibration, and start the game
         case 13:
             if ((enterKeydown.length < 3) || ((enterKeydown.length >= 3) && doneCalibrating)) {
@@ -324,7 +346,7 @@ function allEventsHandler(event) {
                 }
             }
             break;
-        // UP & DWN keys will trigger character flipping
+        // UP & DWN keys will trigger character flipping if key controls are active
         case 38:
             if (usingKeyboard) {
                 upTriggered = true;
@@ -391,38 +413,6 @@ function startMobileGame() {
     isGameBegin = false;
 }
 
-// Wrap text to get paragraph form
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
-    flippyCtx.fillStyle = "#00c6ff";
-    flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    var words = text.split(' ');
-    var line = '';
-    
-    for(var n = 0; n < words.length; n++) {
-        var testLine = line + words[n] + ' ';
-        var metrics = context.measureText(testLine);
-        var testWidth = metrics.width;
-        flippyCtx.fillStyle = "#fff";
-        var fontSize = canvas.width/77;
-        var titleFont = "100 " + fontSize + "px " + "Indie Flower";
-        flippyCtx.font = titleFont;
-        flippyCtx.shadowOffsetX = 0;
-        flippyCtx.shadowOffsetY = 0;
-        flippyCtx.shadowBlur = fontSize;
-        flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
-        if (testWidth > maxWidth && n > 0) {
-            context.fillText(line, x, y);
-            line = words[n] + ' ';
-            y += lineHeight;
-        }
-        else {
-            line = testLine;
-        }
-    }
-    context.fillText(line, x, y);
-}
-
 function askControls() {
     $(document).off("keydown", allEventsHandler);
     control_menu.show();
@@ -472,30 +462,11 @@ function chooseControlOption(event) {
 // Start the first instructions and set initial properties
 function startGame() {
     isGameBegin = true;
-    // flippyCtx.font = "100 20px Indie Flower";
-    // flippyCtx.fillStyle = "#000";
-    // flippyCtx.shadowOffsetX = 0;
-    // flippyCtx.shadowOffsetY = 0;
-    // flippyCtx.shadowBlur = 20;
-    // flippyCtx.shadowColor = "rgba(0,198,255,0.7)";
-    // maxWidth = canvas.width / 3;
-    // lineHeight = 65;
-    // startX = canvas.width / 2 - canvas.width / 6 + 15;
-    // startY = canvas.height/1.9;
-    // text = "Available Controls: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
+    
     if(onMobile) {
-        // var fontSize = canvas.width/10;
-        // var titleFont = "400 " + fontSize + "px " + "Indie Flower";
-        // flippyCtx.font = titleFont;
-        // flippyCtx.fillStyle = "#fff";
-        // flippyCtx.shadowOffsetX = 0;
-        // flippyCtx.shadowOffsetY = 0;
-        // flippyCtx.shadowBlur = fontSize/7.5;
-        // flippyCtx.shadowColor = "rgba(255,255,255,0.7)";
-        // flippyCtx.fillText("TAP", canvas.width/2 - flippyCtx.measureText("TAP").width / 2, startY);
+        //blah
     }
     else {
-        // wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
         instructions.show();
         $(".instruct-screen").hide();
         $("#instruct-1").show();
@@ -550,19 +521,12 @@ function createStream() {
 function calibrate() {
     analyser.getFloatTimeDomainData(freqDataArray);
     var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>";
-    // flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    // flippyCtx.fillStyle = "#00c6ff";
-    // flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-    // var x = canvas.width / 2;
-    // var y = canvas.height * 0.5;
-    // flippyCtx.fillStyle = "#fff";
-    // flippyCtx.fillText(calibrateCount, x, y);
     
     var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
     if (freq != -1){
         pitch.push(freq);
     }
-    // flippyCtx.fillText(Math.floor(pitch[pitch.length - 1]) + " Hz", x, canvas.height * 0.6);
+    
     var samplePitch = Math.floor(pitch[pitch.length - 1]) + " Hz <br><br>";
     $("#instruct-4-voice").html(calibrateCount + samplePitch);
     
@@ -575,13 +539,10 @@ function calibrate() {
             pitchCenter += pitch[i];
         }
         pitchCenter /= pitch.length;
-        // flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
-        // flippyCtx.fillStyle = "#00c6ff";
-        // flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+        
         var doneCalibrateMsg = "Done Calibrating! Your pitch is :  " + Math.floor(pitchCenter) + " Hz.";
         $("#instruct-4-voice").html(calibrateCount + samplePitch + doneCalibrateMsg);
-        // flippyCtx.fillStyle = "#fff";
-        // flippyCtx.fillText(doneCalibrateMsg, x - flippyCtx.measureText(doneCalibrateMsg).width / 2, canvas.height * 0.6);
+        
         doneCalibrating = true;
     }
 }
@@ -703,6 +664,7 @@ function render() {
     );
     drawName();
     drawPause();
+    drawToggleControls();
 
     // Redraw all the previous lines
     if (positionHistory.length > 0) {
@@ -898,7 +860,7 @@ function drawTail(catsprite, x, y) {
     flippyCtx.shadowColor = "rgba(255,215,0,0)";
     x -= view.left_x;
     
-    if (crop.y >= 23 && crop.y < 40) {
+    if (crop.y >= 23 && crop.y < 40) { // change tail's colors to make it look like it's moving
         crop.y += 1;
     }
     else {
@@ -1337,6 +1299,7 @@ function loadRetry() {
             tailPosHistory.length = 0;
             
             // Reset the character to default position
+            currentPitch = null;
             upTriggered = false;
             downTriggered = false;
             lastCharDirection = "up";
@@ -1489,6 +1452,16 @@ function drawPause() {
     }
 }
 
+function drawToggleControls() {
+    flippyCtx.fillStyle = "#ffde2b";
+    if (onMobile) {
+        flippyCtx.fillText("toggle controls", 25, 65);
+    }
+    else {
+        flippyCtx.fillText("press C to toggle controls", 25, 65);
+    }
+}
+
 function pauseGame() { // Once spacebar is pressed...
     // Check if game is over
     if (intersectsChar() === false) {
@@ -1544,6 +1517,7 @@ window.onload = function() {
         onMobile = true;
         if (mobileload) {
             transitionLoad(); // Remove loading screen once everything is loaded
+            instructions = $(".instructions").hide();
             control_menu = $("#control-menu");
             control_menu.hide();
             score_form = $("#score-form");
@@ -1577,13 +1551,13 @@ function transitionLoad() {
 }
 
 function removeLoad() {
-    load_screen.remove(); // Remove loading screen once everything is loaded
+    load_screen.remove(); // Remove loading screen once everything is loaded and load screen has finished transitioning out
 }
 
 
 //TODO:
 /*
----Make "toggle controls" option
+-x-Make "toggle controls" option
 ---Make "recalibrate" option
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
@@ -1595,5 +1569,4 @@ function removeLoad() {
 ---Exclude drawing trails off screen
 ---BUG: submits score twice
 ---Close form/leaderboard when clicked outside of those elements
--x-Revamp instructions screens: use divs instead of canvas
 */

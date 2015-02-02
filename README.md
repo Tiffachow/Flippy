@@ -18,7 +18,6 @@
 ---
 ## TODO:
 
-* ---Make "toggle controls" option
 * ---Make "recalibrate" option
 * ---Exclude drawing trails off screen
 * ---BUG: submits score twice
