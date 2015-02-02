@@ -1,5 +1,5 @@
 var onMobile = false;
-var WebFont, load_screen, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
+var WebFont, load_screen, control_menu, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
 var float = [false, false, false, false, false];
@@ -17,11 +17,20 @@ var source,
     freqDataArray,
     MIN_SAMPLES,
     pitch = [],
-    pitchCenter;
+    pitchCenter,
+    doneCalibrating = false,
+    currentPitch = null,
+    pitchSamples = [],
+    countOfNoPitchFound = 0,
+    noPitchThreshold = 10,
+    countofSamples = 5;
 
 // Start Game variables
-var isGameBegin;
-var enterKeydown = [];
+var isGameBegin,
+    enterKeydown = [],
+    controlMethod,
+    usingVoice = false,
+    usingKeyboard = false;
 
 // wrapText Variables
 var maxWidth;
@@ -94,9 +103,9 @@ charImg.height = 80;
 var crop = {x:0, y:0};
 
 // createCharacter function variables
-var upKeydown = false;
-var downKeydown = false;
-var lastKeydown = "up";
+var upTriggered = false;
+var downTriggered = false;
+var lastCharDirection = "up";
 var tailPosHistory = []; 
 
 // Pause variable
@@ -123,7 +132,7 @@ var SCORE_X,
     submitted = false,
     score_string;
 
-var DEBUG = false;
+var DEBUG = true;
 
 function init() {
     // Make the canvas fullscreen
@@ -239,100 +248,7 @@ function init() {
     });
 
     // Set variables to listen for tap, enter, up, down and spacebar keydowns
-    $(document).on("keydown", function(event) {
-        
-        switch (event.keyCode) {
-            // Enter key will enable player to trigger instructions, calibration, and start the game
-            case 13:
-                enterKeydown.push(true);
-                if (isGameBegin) {
-                    if (enterKeydown[0]) {
-                        text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[0] = false;
-                    }
-                    if (enterKeydown[1]) {
-                        text = "Calibration Time!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[1] = false;
-                    }
-                    if (enterKeydown[2]) {
-                        text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[2] = false;
-                    }
-                    if (enterKeydown[3]) {
-                        createStream();
-                        enterKeydown[3] = false;
-                    }
-                    if (enterKeydown[4]) {
-                        flippyCtx.font = "400 50px Indie Flower";
-                        text = "Get Ready...    ENTER/tap to START!";
-                        wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
-                        enterKeydown[4] = false;
-                    }
-                    if (enterKeydown[5]) {
-                        // start game
-                        render();
-                        enterKeydown[5] = false;
-                    }
-                }
-                break;
-            // UP & DWN keys will trigger character flipping
-            case 38:
-                upKeydown = true;
-                break;
-            case 40:
-                downKeydown = true;
-                break;
-            // Set spacebar to pause and resume game
-            case 32:
-                pauseGame();
-                break;
-            // Secret
-            case 70:
-                if (float[0] === false) { 
-                    float[0] = true;
-                }
-                else {
-                    float[0] = false;
-                }
-                break;
-            case 76:
-                if (float[1] === false) { 
-                    float[1] = true;
-                }
-                else {
-                    float[1] = false;
-                }
-                break;
-            case 79:
-                if (float[2] === false) { 
-                    float[2] = true;
-                }
-                else {
-                    float[2] = false;
-                }
-                break;
-            case 65:
-                if (float[3] === false) { 
-                    float[3] = true;
-                }
-                else {
-                    float[3] = false;
-                }
-                break;
-            case 84:
-                if (float[4] === false) { 
-                    float[4] = true;
-                }
-                else {
-                    float[4] = false;
-                }
-                break;
-        }
-    });
-    
+    $(document).on("keydown", allEventsHandler);
 
     // Load font
     WebFont.load({
@@ -346,6 +262,116 @@ function init() {
             startGame();
         }
     });
+}
+
+function allEventsHandler(event) {
+        
+    switch (event.keyCode) {
+        // Enter key will enable player to trigger instructions, calibration, and start the game
+        case 13:
+            if ((enterKeydown.length < 4) || ((enterKeydown.length >= 4) && doneCalibrating)) {
+                enterKeydown.push(true);
+            }
+            if (isGameBegin) {
+                if (enterKeydown[0]) {
+                    askControls();
+                    if (!!$(".voice_option").attr('id')) {
+                        usingVoice = true;
+                        usingKeyboard = false;
+                    }
+                    else if (!!$(".keyboard_option").attr('id')) {
+                        usingKeyboard = true;
+                        usingVoice = false;
+                    }
+                    text = "AHHH One moment flippy's munching happily on his paw, the next, he's in this strange place???    Help flippy avoid the mystery walls!    ---ENTER/tap to continue.";
+                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                    enterKeydown[0] = false;
+                }
+                if (enterKeydown[1]) {
+                    text = "Calibration Time!";
+                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                    enterKeydown[1] = false;
+                }
+                if (enterKeydown[2]) {
+                    text = "Make a sound at the pitch you would like to be the default.    Not too high or too low!";
+                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                    enterKeydown[2] = false;
+                }
+                if (enterKeydown[3]) {
+                    createStream();
+                    enterKeydown[3] = false;
+                }
+                if (enterKeydown[4]) {
+                    flippyCtx.font = "400 50px Indie Flower";
+                    text = "Get Ready...    ENTER/tap to START!";
+                    wrapText(flippyCtx, text, startX, startY, maxWidth, lineHeight);
+                    enterKeydown[4] = false;
+                }
+                if (enterKeydown[5]) {
+                    // start game
+                    render();
+                    takeSample();
+                    enterKeydown[5] = false;
+                }
+            }
+            break;
+        // UP & DWN keys will trigger character flipping
+        case 38:
+            if (controlMethod == "keyboard") {
+                upTriggered = true;
+            }
+                break;
+        case 40:
+            if (controlMethod == "keyboard") {
+                downTriggered = true;
+            }
+            break;
+        // Set spacebar to pause and resume game
+        case 32:
+            pauseGame();
+            break;
+        // Secret
+        case 70:
+            if (float[0] === false) { 
+                float[0] = true;
+            }
+            else {
+                float[0] = false;
+            }
+            break;
+        case 76:
+            if (float[1] === false) { 
+                float[1] = true;
+            }
+            else {
+                float[1] = false;
+            }
+            break;
+        case 79:
+            if (float[2] === false) { 
+                float[2] = true;
+            }
+            else {
+                float[2] = false;
+            }
+            break;
+        case 65:
+            if (float[3] === false) { 
+                float[3] = true;
+            }
+            else {
+                float[3] = false;
+            }
+            break;
+        case 84:
+            if (float[4] === false) { 
+                float[4] = true;
+            }
+            else {
+                float[4] = false;
+            }
+            break;
+    }
 }
 
 //TODO
@@ -388,6 +414,37 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     context.fillText(line, x, y);
 }
 
+function askControls() {
+    $(document).off("keydown", allEventsHandler);
+    control_menu.show();
+    $(".voice_option").attr("id", "selected_control");
+    $(document).on("keydown", chooseControlOption);
+    
+    $(".option").on("click", function(){
+        $(this).attr("id", "selected_control");
+        $(".option").not(this).removeAttr("id");
+        control_menu.hide();
+        $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
+    });
+}
+
+function chooseControlOption(event) {
+    switch (event.keyCode) {
+        case 38: // go up to select
+            $(".voice_option:not(:has(#selected_control))").attr("id", "selected_control");
+            $(".keyboard_option").removeAttr("id");
+            break;
+        case 40: // go down to select
+            $(".keyboard_option:not(:has(#selected_control))").attr("id", "selected_control");
+            $(".voice_option").removeAttr("id");
+            break;
+        case 13:  
+            control_menu.hide();
+            $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
+            break;
+    }
+}
+
 // Start the first instructions and set initial properties
 function startGame() {
     isGameBegin = true;
@@ -401,7 +458,7 @@ function startGame() {
     lineHeight = 65;
     startX = canvas.width / 2 - canvas.width / 6 + 15;
     startY = canvas.height/1.9;
-    text = "CONTROLS: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
+    text = "Available Controls: high pitch to flip UP, low pitch to flip DOWN, SPACE to pause.    Alternatives: UP and DOWN keys to flip.    ---ENTER/tap to continue.";
     if(onMobile) {
         var fontSize = canvas.width/10;
         var titleFont = "400 " + fontSize + "px " + "Indie Flower";
@@ -445,7 +502,7 @@ function createStream() {
                 analyser.maxDecibels = -50;
                 analyser.minDecibels = -150;
                 bufferLength = analyser.frequencyBinCount;
-                freqDataArray = new Uint8Array(bufferLength);
+                freqDataArray = new Float32Array(bufferLength);
                 
                 MIN_SAMPLES = 0;
                 
@@ -464,18 +521,43 @@ function createStream() {
 }
 
 function calibrate() {
-    analyser.getByteFrequencyData(freqDataArray);
-    pitch.push = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    analyser.getFloatTimeDomainData(freqDataArray);
+    var calibrateCount = (pitch.length + 1).toString();
+    flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+    flippyCtx.fillStyle = "#00c6ff";
+    flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+    var x = canvas.width / 2;
+    var y = canvas.height * 0.5;
+    flippyCtx.fillStyle = "#fff";
+    flippyCtx.fillText(calibrateCount, x, y);
     
-    if (pitch.length <= 3) {
-        setTimeout(calibrate, 500);
+    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    if (freq != -1){
+        pitch.push(freq);
     }
-
-    pitchCenter = (pitch[0] + pitch[1] + pitch[2]) / 3;
+    flippyCtx.fillText(Math.floor(pitch[pitch.length - 1]) + " Hz", x, canvas.height * 0.6);
+    
+    if (pitch.length < 100) {
+        setTimeout(calibrate, 20);
+    }
+    else {
+        pitchCenter = 0;
+        for (var i = 0; i < pitch.length; i++) {
+            pitchCenter += pitch[i];
+        }
+        pitchCenter /= pitch.length;
+        flippyCtx.clearRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+        flippyCtx.fillStyle = "#00c6ff";
+        flippyCtx.fillRect(startX - 10,canvas.height/2.3,maxWidth + 10,4*lineHeight);
+        var doneCalibrateMsg = "Done Calibrating! Your pitch is :  " + Math.floor(pitchCenter) + " Hz.";
+        flippyCtx.fillStyle = "#fff";
+        flippyCtx.fillText(doneCalibrateMsg, x - flippyCtx.measureText(doneCalibrateMsg).width / 2, canvas.height * 0.6);
+        doneCalibrating = true;
+    }
 }
 
 // From https://github.com/cwilso/PitchDetect/blob/master/js/pitchdetect.js
-function autoCorrelate( freqDataArray, sampleRate ) { // Using autocorrelation to determine the pitch from FFT data
+function autoCorrelate(freqDataArray, sampleRate) { // Using autocorrelation to determine the pitch from FFT data
 	var SIZE = freqDataArray.length;
 	var MAX_SAMPLES = Math.floor(SIZE/2);
 	var best_offset = -1;
@@ -484,24 +566,24 @@ function autoCorrelate( freqDataArray, sampleRate ) { // Using autocorrelation t
 	var foundGoodCorrelation = false;
 	var correlations = new Array(MAX_SAMPLES);
 
-	for (var i=0;i<SIZE;i++) {
+	for (var i = 0; i < SIZE; i++) {
 		var val = freqDataArray[i];
-		rms += val*val;
+		rms += val * val;
 	}
-	rms = Math.sqrt(rms/SIZE);
-	if (rms<0.01) // not enough signal
+	rms = Math.sqrt(rms / SIZE);
+	if (rms < 0.01) // not enough signal
 		return -1;
 
-	var lastCorrelation=1;
+	var lastCorrelation = 1;
 	for (var offset = MIN_SAMPLES; offset < MAX_SAMPLES; offset++) {
 		var correlation = 0;
 
-		for (i=0; i<MAX_SAMPLES; i++) {
-			correlation += Math.abs((freqDataArray[i])-(freqDataArray[i+offset]));
+		for (i = 0; i < MAX_SAMPLES; i++) {
+			correlation += Math.abs((freqDataArray[i]) - (freqDataArray[i + offset]));
 		}
 		correlation = 1 - (correlation/MAX_SAMPLES);
 		correlations[offset] = correlation; // store it, for the tweaking we need to do below.
-		if ((correlation>0.9) && (correlation > lastCorrelation)) {
+		if ((correlation > 0.9) && (correlation > lastCorrelation)) {
 			foundGoodCorrelation = true;
 			if (correlation > best_correlation) {
 				best_correlation = correlation;
@@ -514,17 +596,17 @@ function autoCorrelate( freqDataArray, sampleRate ) { // Using autocorrelation t
 			// we need to do a curve fit on correlations[] around best_offset in order to better determine precise
 			// (anti-aliased) offset.
 
-			// we know best_offset >=1, 
-			// since foundGoodCorrelation cannot go to true until the second pass (offset=1), and 
+			// we know best_offset >= 1, 
+			// since foundGoodCorrelation cannot go to true until the second pass (offset = 1), and 
 			// we can't drop into this clause until the following pass (else if).
-			var shift = (correlations[best_offset+1] - correlations[best_offset-1])/correlations[best_offset];  
-			return sampleRate/(best_offset+(8*shift));
+			var shift = (correlations[best_offset + 1] - correlations[best_offset - 1]) / correlations[best_offset];  
+			return sampleRate / (best_offset + (8 * shift));
 		}
 		lastCorrelation = correlation;
 	}
 	if (best_correlation > 0.01) {
 		// console.log("f = " + sampleRate/best_offset + "Hz (rms: " + rms + " confidence: " + best_correlation + ")")
-		return sampleRate/best_offset;
+		return sampleRate / best_offset;
 	}
 	return -1;
     //	var best_frequency = sampleRate/best_offset;
@@ -532,14 +614,33 @@ function autoCorrelate( freqDataArray, sampleRate ) { // Using autocorrelation t
 
 
 function flipCharWithStream() {
-    // pitch above calibrated center will set upkeydown to true
-    if (pitch[pitch.length - 1] >= pitchCenter) {
-        upKeydown = true;
+    // Averaged pitch above calibrated center will set upTriggered to true
+    if (currentPitch >= pitchCenter) {
+        upTriggered = true;
     }
-    // pitch below calibrated center will set downkeydown to true
-    if (pitch[pitch.length - 1] < pitchCenter) {
-        downKeydown = true;
+    // Averaged pitch below calibrated center will set downTriggered to true
+    if (currentPitch < pitchCenter) {
+        downTriggered = true;
     }
+}
+
+function takeSample() { // Take samples
+    analyser.getFloatTimeDomainData(freqDataArray);
+    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    if (freq != -1) {
+        if (countOfNoPitchFound >= noPitchThreshold) {
+            pitchSamples.length = 0;
+        }
+        pitchSamples.push(freq);
+        if (pitchSamples.length > countofSamples) {
+            pitchSamples.shift();
+        }
+        countOfNoPitchFound = 0;
+    }
+    else {
+        countOfNoPitchFound++;
+    }
+    setTimeout(takeSample, 20);
 }
 
 function render() {
@@ -547,9 +648,15 @@ function render() {
     isGameBegin = false; // Stop enter keydown from triggering instructions
 
     flippyCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas every render
-
-    analyser.getByteFrequencyData(freqDataArray);
-    pitch.push = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    
+    if (pitchSamples.length >= countofSamples) {
+        currentPitch = 0;
+        for (var i = 0; i < pitchSamples.length; i++) { // Calculate average of last 10 samples of pitch
+            currentPitch += pitchSamples[i];
+        }
+        currentPitch /= pitchSamples.length;
+    }
+    
     flipCharWithStream();
     
     drawSpace(position.background);
@@ -697,6 +804,10 @@ function render() {
         loadGameOver();
         // Show retry option
         loadRetry();
+    }
+
+    if (DEBUG) { // to debug 
+        flippyCtx.fillText(currentPitch, 20, 20);
     }
 
 }
@@ -954,34 +1065,34 @@ function calcScore(msElapsed) {
 
 function createChar() {
     // If up is pressed, draw rightside up img
-    if (upKeydown === true) {
+    if (upTriggered === true) {
         if (isRunning) {
             drawTail(charImg, position.cat_x, BASE_POS - 22); // Draw cat's tail
             tailPosHistory.push({x:position.cat_x, y:BASE_POS - 22}); // Save tail position
             // Draw rightside up cat above the line
             crop.y = 0;
             drawCat(charImg, position.cat_x, BASE_POS - 22);
-            lastKeydown = "up"; // Set last position as up
+            lastCharDirection = "up"; // Set last position as up
         }
-        upKeydown = false; // Reset keydown event listener variable
+        upTriggered = false; // Reset keydown event listener variable
     }
     // If down is pressed, draw upside down img
-    else if (downKeydown === true) {
+    else if (downTriggered === true) {
         if (isRunning) {
             drawTail(charImg, position.cat_x, BASE_POS + 4); // Draw tail of cat
             tailPosHistory.push({x:position.cat_x, y:BASE_POS + 4}); // Save tail's position
             // Draw upside down cat below the line
             crop.y = 60;
             drawCat(charImg, position.cat_x, BASE_POS + 4);
-            lastKeydown = "down"; // Set last position as down
+            lastCharDirection = "down"; // Set last position as down
         }
-        downKeydown = false; // Reset keydown event listener variable
+        downTriggered = false; // Reset keydown event listener variable
     }
 
     // If no key was pressed, maintain last position of img
     else {
         // If img was previously in the up position, draw img in up position
-        if (lastKeydown == "up") {
+        if (lastCharDirection == "up") {
             drawTail(charImg, position.cat_x, BASE_POS - 22); // Draw cat's tail
             tailPosHistory.push({x:position.cat_x, y:BASE_POS - 22}); // Save tail position
             // Draw cat rightside up above the line
@@ -989,7 +1100,7 @@ function createChar() {
             drawCat(charImg, position.cat_x, BASE_POS - 22);
         }
         // If img was previously in the down position, draw img in down position
-        else if (lastKeydown == "down") {
+        else if (lastCharDirection == "down") {
             drawTail(charImg, position.cat_x, BASE_POS + 4); // Draw cat's tail
             tailPosHistory.push({x:position.cat_x, y:BASE_POS + 4}); // Save tail position
             // Draw upside down cat below the line
@@ -1001,12 +1112,12 @@ function createChar() {
 
 function intersectsChar() {
     // Return true if: the character is in the up position and there is an up obstacle in the same x position as the character
-    if (positionHistory.some(isInMidXUpYPos) && lastKeydown == "up") {
+    if (positionHistory.some(isInMidXUpYPos) && lastCharDirection == "up") {
         isGameOver = "yes";
         return true;
     }
     // Return true if: the character is in the down position and there is a down obstacle in the same x position as the character
-    else if (positionHistory.some(isInMidXDwnYPos) && lastKeydown == "down") {
+    else if (positionHistory.some(isInMidXDwnYPos) && lastCharDirection == "down") {
         isGameOver = "yes";
         return true;
     }
@@ -1187,9 +1298,9 @@ function loadRetry() {
             tailPosHistory.length = 0;
             
             // Reset the character to default position
-            upKeydown = false;
-            downKeydown = false;
-            lastKeydown = "up";
+            upTriggered = false;
+            downTriggered = false;
+            lastCharDirection = "up";
             crop = {x:0, y:0};
             
             // Run the game!
@@ -1394,6 +1505,8 @@ window.onload = function() {
         onMobile = true;
         if (mobileload) {
             transitionLoad(); // Remove loading screen once everything is loaded
+            control_menu = $("#control_menu");
+            control_menu.hide();
             score_form = $("#score_form");
             score_form.hide();
             leaderboard = $("#leaderboard");
@@ -1403,6 +1516,8 @@ window.onload = function() {
     }
     else {
         transitionLoad(); // Remove loading screen once everything is loaded
+        control_menu = $(".control_menu");
+        control_menu.hide();
         score_form = $("#score_form");
         score_form.hide();
         leaderboard = $("#leaderboard");
@@ -1428,8 +1543,9 @@ function removeLoad() {
 
 //TODO:
 /*
----Write calibrate function
----Add audio capabilities
+-x-Write calibrate function
+-x-Add audio capabilities
+---Make menu and instructions cleaner
 ---Make mobile compatible
     -x-Change all absolute measurements to relative to screen sizes
     ---Add mobile events

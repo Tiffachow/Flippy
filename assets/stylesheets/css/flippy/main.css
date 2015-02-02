@@ -45,6 +45,42 @@ canvas {
     height: 100%;
 }
 
+.control_menu {
+    position: absolute;
+    z-index: 1;
+    width: 40%;
+    height: 313px;
+    top: 313px;
+    left: 30%;
+    border: 10px solid #000;
+    border-radius: 15px;
+    background: #00c6ff;
+    color: #000;
+    text-align: center;
+}
+
+.control_menu h2 {
+    font: 400 40px/1em "Indie Flower", Arial, sans-serif;
+    margin: 3% 0;
+}
+
+.option {
+    font: 400 75px/1em "Indie Flower", Arial, sans-serif;
+    border: 5px solid #000;
+    width: auto;
+    height: 1em;
+    margin: 5px;
+    padding-top: 10px;
+    cursor: pointer;
+    transition: background 200ms ease-in-out, color 200ms ease-in-out, border 200ms ease-in-out;
+}
+
+.option:hover, #selected_control {
+    background: #fff;
+    color: #00c6ff;
+    border: 5px solid #fff;
+}
+
 #score_form {
     z-index: 1;
     width: 33%;
@@ -100,7 +136,7 @@ canvas {
     overflow-y: scroll;
 }
 
-h1 {
+.leaderboard h1 {
     text-align: center;
     padding-top: 40px;
     font-weight: 800;
