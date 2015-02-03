@@ -261,6 +261,7 @@ function finishCalibration(event) {
         instructions.hide();
         $("#instruct-4-voice").hide();
         pauseGame();
+        takeSample();
         $(document).off("keydown", finishCalibration);
     }
 }
@@ -1557,7 +1558,6 @@ function removeLoad() {
 
 //TODO:
 /*
--x-Make "toggle controls" option
 ---Make "recalibrate" option
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
