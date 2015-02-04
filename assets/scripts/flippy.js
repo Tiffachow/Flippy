@@ -257,12 +257,12 @@ function init() {
 }
 
 function finishCalibration(event) {
-    if (event.keyCode == 13 && doneCalibrating) {
-        instructions.hide();
-        $("#instruct-4-voice").hide();
-        pauseGame();
-        takeSample();
-        $(document).off("keydown", finishCalibration);
+    if (event.keyCode == 13 && doneCalibrating) { // If enter is pressed and calibration is done...
+        instructions.hide(); // Hide the calibration guiding screen
+        $("#instruct-4-voice").hide(); 
+        pauseGame(); // Unpause game
+        takeSample(); // Restart taking samples to calculate current pitch to play
+        $(document).off("keydown", finishCalibration); // Unbind this function on enter key event, so normal enter keydown handlers can resume
     }
 }
 
@@ -280,45 +280,43 @@ function allEventsHandler(event) {
                 usingVoice = true;
             }
             else { // If haven't calibrated before, pause and calibrate before allowing to toggle to voice controls at will
-                pauseGame();
-                instructions.show();
-                $("#instruct-4-voice").show();
-                createStream();
-                usingKeyboard = false;
-                usingVoice = true;
-                $(document).on("keydown", finishCalibration);
+                recalibrate();
             }
-        break;
+            break;
+        
+        case 82: // Press r to recalibrate
+            recalibrate();
+            break;
         
         // Enter key will enable player to trigger instructions, calibration, and start the game
         case 13:
-            if ((enterKeydown.length < 3) || ((enterKeydown.length >= 3) && doneCalibrating)) {
+            if ((enterKeydown.length < 3) || ((enterKeydown.length >= 3) && doneCalibrating)) { // Ensures that player can't continue screen during calibration until it's finished
                 enterKeydown.push(true);
             }
             if (isGameBegin) {
                 
                 if (enterKeydown[0]) {
                     $("#instruct-1").hide();
-                    askControls();
+                    askControls(); // Prompt player to choose method of controlling game (voice or keyboard)
                     enterKeydown[0] = false;
                 }
                 
-                if (usingKeyboard) {
+                if (usingKeyboard) { // If player chose to use keyboard to play, trigger the set of instructions for that
                     
                     if (enterKeydown[1]) {
                         $("#instruct-2-key").hide();
-                        $("#instruct-5").show();
+                        $("#instruct-5").show(); // Notify player to get ready to play
                         enterKeydown[1] = false;
                     }
                     if (enterKeydown[2]) {
                         $("#instruct-5").hide();
-                        instructions.hide();
-                        render();
+                        instructions.hide(); // Finish and hide instructions
+                        render(); // Run the game
                         enterKeydown[2] = false;
                     }
                 }
                 
-                if (usingVoice) {
+                if (usingVoice) { // If player chose to use voice to play, trigger the set of instructions for that
                     
                     if (enterKeydown[1]) {
                         $("#instruct-2-voice").hide();
@@ -327,21 +325,21 @@ function allEventsHandler(event) {
                     }
                     if (enterKeydown[2]) {
                         $("#instruct-3-voice").hide();
-                        $("#instruct-4-voice").show();
-                        createStream();
+                        $("#instruct-4-voice").show(); // Tell player how to calibrate & show their calibration in real-time
+                        createStream(); // Create audio stream and start & conclude calibration process
                         enterKeydown[2] = false;
                     }
                     if (enterKeydown[3]) {
                         $("#instruct-4-voice").hide();
-                        $("#instruct-5").show();
+                        $("#instruct-5").show(); // Notify player to get ready to play
                         enterKeydown[3] = false;
                     }
                     if (enterKeydown[4]) {
                         // start game
                         $("#instruct-5").hide();
-                        instructions.hide();
-                        render();
-                        takeSample();
+                        instructions.hide(); // Hide instructions
+                        render(); // Start game
+                        takeSample(); // Start taking samples of player's pitch to create an average they can use to control Flippy
                         enterKeydown[4] = false;
                     }
                 }
@@ -352,7 +350,7 @@ function allEventsHandler(event) {
             if (usingKeyboard) {
                 upTriggered = true;
             }
-                break;
+            break;
         case 40:
             if (usingKeyboard) {
                 downTriggered = true;
@@ -414,48 +412,48 @@ function startMobileGame() {
     isGameBegin = false;
 }
 
-function askControls() {
-    $(document).off("keydown", allEventsHandler);
-    control_menu.show();
-    $(".voice-option").attr("id", "selected-control");
-    $(document).on("keydown", chooseControlOption);
+function askControls() { // Prompt player to choose controls, then set the preferred method
+    $(document).off("keydown", allEventsHandler); // Temporarily unbind regular events handler
+    control_menu.show(); // Show menu to choose controls
+    $(".voice-option").attr("id", "selected-control"); // By default, voice controls is selected method
+    $(document).on("keydown", chooseControlOption); // Bind handler temporarily in this function to up, down & enter keydowns for choosing controls
     
-    $(".option").on("click", function(){
-        $(this).attr("id", "selected-control");
-        $(".option").not(this).removeAttr("id");
-        control_menu.hide();
-        $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
-        setControls();
+    $(".option").on("click", function(){ // On clicking a control setting option, ...
+        $(this).attr("id", "selected-control"); // Set that option to be the method of controls
+        $(".option").not(this).removeAttr("id"); // Set the other option to not be the method of controls
+        control_menu.hide(); // Hide the menu
+        $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler); // Unbind the event handler for choosing controls and re-bind the regular event handler function
+        setControls(); // Set player's selected controls method/option to be the controls of the game
     });
 }
 
-function setControls() {
-    if (!!$(".voice-option").attr('id')) {
+function setControls() { // Set player's selected controls method/option to be the controls of the game
+    if (!!$(".voice-option").attr('id')) { // If voice controls are selected, enable voice controls, disable keybard controls
         usingVoice = true;
         usingKeyboard = false;
-        $("#instruct-2-voice").show();
+        $("#instruct-2-voice").show(); // Show the next screen of instructions for voice option
     }
-    else if (!!$(".keyboard-option").attr('id')) {
+    else if (!!$(".keyboard-option").attr('id')) { // If keyboard controls are selected, enable keyboard controls, disable voice controls
         usingKeyboard = true;
         usingVoice = false;
-        $("#instruct-2-key").show();
+        $("#instruct-2-key").show(); // Show the next screen of instructions for keyboard option
     }
 }
 
-function chooseControlOption(event) {
+function chooseControlOption(event) { // For choosing control options with keyboard instead of mouse/clicking
     switch (event.keyCode) {
-        case 38: // go up to select
+        case 38: // Go up to select voice option
             $(".voice-option:not(:has(#selected-control))").attr("id", "selected-control");
             $(".keyboard-option").removeAttr("id");
             break;
-        case 40: // go down to select
+        case 40: // Go down to select keyboard option
             $(".keyboard-option:not(:has(#selected-control))").attr("id", "selected-control");
             $(".voice-option").removeAttr("id");
             break;
-        case 13:  
-            control_menu.hide();
-            $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler);
-            setControls();
+        case 13:  // On enter, ...
+            control_menu.hide(); // Hide menu to indicate player has chosen 
+            $(document).off("keydown", chooseControlOption).on("keydown", allEventsHandler); // Unbind handler for choosing controls and re-bind regular handler for events
+            setControls(); // Set game to be played with the player's chosen controls method
             break;
     }
 }
@@ -480,8 +478,7 @@ function createStream() {
                               navigator.webkitGetUserMedia ||
                               navigator.mozGetUserMedia ||
                               navigator.msGetUserMedia);
-    
-    
+
     // getUserMedia block - grab audio stream, put it into a MediaStreamAudioSourceNode, connect stream to analyser
     if (navigator.getUserMedia) {
         navigator.getUserMedia (
@@ -517,6 +514,24 @@ function createStream() {
     else {
         alert("getUserMedia not supported in your browser. Please switch to another browser or play with up/down keys.");
     }
+}
+
+function recalibrate() {
+    pauseGame();
+    if (pitch.length != 0) { // If recalibrating, reset pitch values and notify player to get ready
+        pitch.length = 0;
+        pitchCenter = null;
+        $("#instruct-4-voice").html("<br><br><br>Ready to REcalibrate! <br> Try to keep your voice at the same pitch. <br> Keep going 'til you reach 100! <br>");
+    }
+    else { // If calibrating for first time, notify player
+        $("#instruct-4-voice").html("<br><br><br>Ready to CALIBRATE! <br> Try to keep your voice at the same pitch. <br> Keep going 'til you reach 100! <br>");
+    }
+    instructions.show();
+    $("#instruct-4-voice").show();
+    createStream();
+    usingKeyboard = false;
+    usingVoice = true;
+    $(document).on("keydown", finishCalibration); // Bind function (to conclude calibration process) to pressing enter key
 }
 
 function calibrate() {
@@ -666,6 +681,9 @@ function render() {
     drawName();
     drawPause();
     drawToggleControls();
+    if (usingVoice) {
+        drawRecalibrate();
+    }
 
     // Redraw all the previous lines
     if (positionHistory.length > 0) {
@@ -1216,7 +1234,7 @@ function loadRetry() {
     
     $(document).on("click tap", function(ev) { // Check if player has clicked
 
-        // Is the mouse over retry area  while game is over (and user has clicked)?
+        // Is the mouse over retry area  while game is over (and player has clicked)?
         if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
             
             // Allow player to RETRY by resetting render()'s variables to its initial values and running render
@@ -1353,7 +1371,7 @@ function submitScoreviewLeaderboard() {
     
     $(document).on("click tap", function(ev) { // Check if player has clicked
 
-        // Is the mouse over submit score link while game is over (and user has clicked)?
+        // Is the mouse over submit score link while game is over (and player has clicked)?
         if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
             
             // Show form and hide leaderboard
@@ -1367,13 +1385,13 @@ function submitScoreviewLeaderboard() {
             score_form.show();
             leaderboard.hide();
             
-            // On form, let users know the score they're submitting
+            // On form, let players know the score they're submitting
             score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
             $("#score-detail").html(score_string);
             
         }
         
-        // Check if user submitted form
+        // Check if player submitted form
         $("#submit").on("click tap", function(event){
             submitted = true;
         });
@@ -1463,6 +1481,16 @@ function drawToggleControls() {
     }
 }
 
+function drawRecalibrate() {
+    flippyCtx.fillStyle = "#00c6ff";
+    if (onMobile) {
+        flippyCtx.fillText("recalibrate", 25, 85);
+    }
+    else {
+        flippyCtx.fillText("press R to recalibrate", 25, 85);
+    }
+}
+
 function pauseGame() { // Once spacebar is pressed...
     // Check if game is over
     if (intersectsChar() === false) {
@@ -1498,7 +1526,7 @@ function pauseOnMobile() { //TODO
          
     //  });
 
-    // Is the mouse over pause link while game is running (and user has tapped)?
+    // Is the mouse over pause link while game is running (and player has tapped)?
     if (mouse_score_x >= PAUSE_X && mouse_score_x <= (PAUSE_X + pauseWidth) && mouse_score_y <= PAUSE_Y && mouse_score_y >= (PAUSE_Y - PAUSE_HEIGHT)) {
         
         // Pause/unpause the game

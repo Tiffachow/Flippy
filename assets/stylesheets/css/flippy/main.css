@@ -71,6 +71,7 @@ canvas {
     background: #00c6ff;
     color: #000;
     text-align: center;
+    overflow-y: hidden;
 }
 
 .control-menu h2 {
