@@ -463,12 +463,12 @@ function startGame() {
     isGameBegin = true;
     
     if(onMobile) {
-        //blah
+        //blah todo
     }
     else {
-        instructions.show();
-        $(".instruct-screen").hide();
-        $("#instruct-1").show();
+        instructions.show(); // Start first introduction screen
+        $(".instruct-screen").hide(); // Hide all instructions screens for later
+        $("#instruct-1").show(); // Show the first instruction screen
     }
 }
 
@@ -512,7 +512,7 @@ function createStream() {
         );
     }
     else {
-        alert("getUserMedia not supported in your browser. Please switch to another browser or play with up/down keys.");
+        alert("getUserMedia not supported in your browser. Please switch to another browser or play with keyboard controls.");
     }
 }
 
@@ -528,38 +528,40 @@ function recalibrate() {
     }
     instructions.show();
     $("#instruct-4-voice").show();
-    createStream();
-    usingKeyboard = false;
+    createStream(); // Start calibration process
+    usingKeyboard = false; // Tell game to use voice controls
     usingVoice = true;
     $(document).on("keydown", finishCalibration); // Bind function (to conclude calibration process) to pressing enter key
 }
 
 function calibrate() {
-    analyser.getFloatTimeDomainData(freqDataArray);
-    var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>";
+    analyser.getFloatTimeDomainData(freqDataArray); // Each time you calibrate, get a new set of FFT data
+    var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>"; // Keep track of number of samples of pitch you take from player
     
-    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
+    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate); // Get frequency/pitch from FFT data collected
     if (freq != -1){
-        pitch.push(freq);
+        pitch.push(freq); // If no error or not unable to process signal, then save the pitch
     }
     
     var samplePitch = Math.floor(pitch[pitch.length - 1]) + " Hz <br><br>";
-    $("#instruct-4-voice").html(calibrateCount + samplePitch);
+    $("#instruct-4-voice").html(calibrateCount + samplePitch); // Show players their sample # and corresponding pitch in real-time to guide them in calibrating
     
     if (pitch.length < 100) {
-        setTimeout(calibrate, 20);
+        setTimeout(calibrate, 20); // Keep taking samples til we have 100
     }
     else {
         pitchCenter = 0;
-        for (var i = 0; i < pitch.length; i++) {
+        
+        for (var i = 0; i < pitch.length; i++) { // Once 100 samples are collected, average them to get the center pitch that up/down flipping is compared off of
             pitchCenter += pitch[i];
         }
+        
         pitchCenter /= pitch.length;
         
-        var doneCalibrateMsg = "Done Calibrating! Your pitch is :  " + Math.floor(pitchCenter) + " Hz.";
-        $("#instruct-4-voice").html(calibrateCount + samplePitch + doneCalibrateMsg);
+        var doneCalibrateMsg = "Done Calibrating! Your pitch is :  " + Math.floor(pitchCenter) + " Hz."; 
+        $("#instruct-4-voice").html(calibrateCount + samplePitch + doneCalibrateMsg); // Let player know his/her calibrated center pitch
         
-        doneCalibrating = true;
+        doneCalibrating = true;  // So we can determine if player can continue to next screen and also whether to allow for toggling to voice controls from keyboard controls once game has started
     }
 }
 
@@ -621,33 +623,36 @@ function autoCorrelate(freqDataArray, sampleRate) { // Using autocorrelation to 
 
 
 function flipCharWithStream() {
-    // Averaged pitch above calibrated center will set upTriggered to true
+    // Averaged pitch above calibrated center will set upTriggered to true, effectively flipping FLippy up
     if (currentPitch >= pitchCenter) {
         upTriggered = true;
     }
-    // Averaged pitch below calibrated center will set downTriggered to true
+    // Averaged pitch below calibrated center will set downTriggered to true, effectively flipping FLippy down
     if (currentPitch < pitchCenter) {
         downTriggered = true;
     }
 }
 
 function takeSample() { // Take samples
-    analyser.getFloatTimeDomainData(freqDataArray);
-    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate);
-    if (freq != -1) {
+    analyser.getFloatTimeDomainData(freqDataArray); // Get new set of FFT data
+    var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate); // Translate this FFT data to pitch values
+    if (freq != -1) { 
         if (countOfNoPitchFound >= noPitchThreshold) {
-            pitchSamples.length = 0;
+            pitchSamples.length = 0; // If player is silent for a certain amount of time, clear the saved samples so that past pitches aren't influencing Flippy's movement; better response time
         }
-        pitchSamples.push(freq);
+        
+        pitchSamples.push(freq); // Save samples of pitch if no error in processing or no silence
+        
         if (pitchSamples.length > countofSamples) {
-            pitchSamples.shift();
+            pitchSamples.shift(); // Keep samples count to a constant number (for now, 5) for averaging
         }
-        countOfNoPitchFound = 0;
+        
+        countOfNoPitchFound = 0; // Reset silence tracker if player makes a sound and we are able to process it
     }
     else {
-        countOfNoPitchFound++;
+        countOfNoPitchFound++; // Keep track of how long player has been silent or the signal was unable to be processed
     }
-    setTimeout(takeSample, 20);
+    setTimeout(takeSample, 20); // Continuously take samples!
 }
 
 function render() {
@@ -660,15 +665,16 @@ function render() {
         
         if (pitchSamples.length >= countofSamples) {
             currentPitch = 0;
-            for (var i = 0; i < pitchSamples.length; i++) { // Calculate average of last 10 samples of pitch
+            for (var i = 0; i < pitchSamples.length; i++) { // Calculate average of last (certain amount of) samples of pitch
                 currentPitch += pitchSamples[i];
             }
             currentPitch /= pitchSamples.length;
         }
         
-        flipCharWithStream();
+        flipCharWithStream(); // Flip flippy according to whether current pitch is above or below the player's calibrated center
     }
     
+    // Drawing background, background objects, and options: pause, toggle controls, and recalibrate
     drawSpace(position.background);
     drawSun(position.sun_x, position.sun_y, position.sun_theta);
     drawMoon(position.moon_x, position.moon_y, position.moon_theta);
@@ -681,6 +687,7 @@ function render() {
     drawName();
     drawPause();
     drawToggleControls();
+    
     if (usingVoice) {
         drawRecalibrate();
     }
@@ -821,7 +828,7 @@ function render() {
     }
 
     if (DEBUG) { // to debug 
-        if (usingVoice) { // Show pitch center and current pitch of player in real time
+        if (usingVoice) { // Show pitch center and current pitch of player in real time (actually leaving in for final version now, seems to make gameplay better)
             var fontSize = canvas.width/60;
             var titleFont = "400 " + fontSize + "px " + "Indie Flower";
             flippyCtx.font = titleFont;
@@ -1586,7 +1593,6 @@ function removeLoad() {
 
 //TODO:
 /*
----Make "recalibrate" option
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
     -x-Change all absolute measurements to relative to screen sizes

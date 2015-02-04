@@ -18,7 +18,6 @@
 ---
 ## TODO:
 
-* ---Make "recalibrate" option
 * ---Exclude drawing trails off screen
 * ---BUG: submits score twice
 * ---Close form/leaderboard when clicked outside of those elements
