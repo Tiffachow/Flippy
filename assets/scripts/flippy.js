@@ -772,9 +772,9 @@ function render() {
         positionHistory.shift();
     }
     
-    //TODO
+    // //TODO
     // // Exclude out of view tails from being drawn
-    // while (tailPosHistory[1].x < view.left_x) {
+    // if (tailPosHistory[Math.floor(canvas.width / 24)].x > canvas.width / 2) { 
     //     tailPosHistory.shift();
     // }
     

@@ -1,11 +1,11 @@
 {
   "name": "Flippy",
   "version": "1.0.0",
-  "description": "A HTML5 Canvas and Javascript Web Audio API based web app game.",
+  "description": "A responsive/mobile-capable web app game created with HTML5 Canvas and Javascript and jQuery (and jQueryMobile) libraries. It is pitch-controlled and completely rendered with Canvas as well as integrates JavaScript’s Web Audio API and AJAX, MySQL, node.js and express.js on the server-side.",
   "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Tiffachow/flyPitch.git"
+    "url": "https://github.com/Tiffachow/Flippy.git"
   },
   "keywords": [
     "canvas",
@@ -17,9 +17,9 @@
   "author": "Tiffany Chow",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Tiffachow/flyPitch/issues"
+    "url": "https://github.com/Tiffachow/Flippy/issues"
   },
-  "homepage": "https://github.com/Tiffachow/flyPitch",
+  "homepage": "https://github.com/Tiffachow/Flippy",
   "dependencies": {
     "body-parser": "^1.10.1",
     "express": "^4.11.0",
