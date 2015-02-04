@@ -2,7 +2,7 @@ var onMobile = false;
 var WebFont, load_screen, instructions, control_menu, score_form, leaderboard, beginAudio, loseAudio, audioCtx;
 
 // Secret
-var float = [false, false, false, false, false];
+var floats = [false, false, false, false, false];
 var secret = null;
 var adminOverride = false;
 
@@ -362,43 +362,43 @@ function allEventsHandler(event) {
             break;
         // Secret
         case 70:
-            if (float[0] === false) { 
-                float[0] = true;
+            if (floats[0] === false) { 
+                floats[0] = true;
             }
             else {
-                float[0] = false;
+                floats[0] = false;
             }
             break;
         case 76:
-            if (float[1] === false) { 
-                float[1] = true;
+            if (floats[1] === false) { 
+                floats[1] = true;
             }
             else {
-                float[1] = false;
+                floats[1] = false;
             }
             break;
         case 79:
-            if (float[2] === false) { 
-                float[2] = true;
+            if (floats[2] === false) { 
+                floats[2] = true;
             }
             else {
-                float[2] = false;
+                floats[2] = false;
             }
             break;
         case 65:
-            if (float[3] === false) { 
-                float[3] = true;
+            if (floats[3] === false) { 
+                floats[3] = true;
             }
             else {
-                float[3] = false;
+                floats[3] = false;
             }
             break;
         case 84:
-            if (float[4] === false) { 
-                float[4] = true;
+            if (floats[4] === false) { 
+                floats[4] = true;
             }
             else {
-                float[4] = false;
+                floats[4] = false;
             }
             break;
     }
@@ -536,7 +536,7 @@ function recalibrate() {
 
 function calibrate() {
     analyser.getFloatTimeDomainData(freqDataArray); // Each time you calibrate, get a new set of FFT data
-    var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>"; // Keep track of number of samples of pitch you take from player
+    var calibrateCount = "<br> Taking Sample # " + (pitch.length + 1) + "<br><br>";
     
     var freq = autoCorrelate(freqDataArray, audioCtx.sampleRate); // Get frequency/pitch from FFT data collected
     if (freq != -1){
@@ -797,9 +797,9 @@ function render() {
     isRunning = true;
 
     // Secret
-    if (float.every(isAllTrue)) {
+    if (floats.every(isAllTrue)) {
         promptSecret();
-        float = [false, false, false, false, false];
+        floats = [false, false, false, false, false];
         // Cheat code
         if (secret == "floppybird") {
             adminOverride = true;
@@ -1541,7 +1541,7 @@ function pauseOnMobile() { //TODO
     }
 }
 
-// Once float keys are triggered, ask player for password
+// Once floats keys are triggered, ask player for password
 function promptSecret() {
     secret = prompt("Pssst, password please!");
 }
@@ -1593,14 +1593,14 @@ function removeLoad() {
 
 //TODO:
 /*
+---Exclude drawing trails off screen
+---BUG: submits score twice
+---Close form/leaderboard when clicked outside of those elements
+---Proxypass
+---Test database, form and leaderboard functionalities
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
     -x-Change all absolute measurements to relative to screen sizes
     ---Add mobile events
         ---Start game on tap, pause on tap
----Test database, form and leaderboard functionalities
----Proxypass
----Exclude drawing trails off screen
----BUG: submits score twice
----Close form/leaderboard when clicked outside of those elements
 */
