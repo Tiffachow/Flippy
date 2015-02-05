@@ -1411,7 +1411,7 @@ function submitScoreviewLeaderboard() {
             if (isAlphaNum(alias)) {
             
                 $.ajax({
-                    url: "/projects/flippy/leaderboard/server.js",
+                    url: "/leaderboard/",
                     type: "POST",
                     data: {alias:alias, score:msElapsed},
                 }).done(function(){
@@ -1442,7 +1442,7 @@ function submitScoreviewLeaderboard() {
             score_form.hide();
         
             $.ajax({ // Get data from database                                        
-              url: '/projects/flippy/leaderboard/server.js',
+              url: '/leaderboard/',
               type: "GET",
               dataType: "text",
             }).done(function(data)

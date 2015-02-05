@@ -1,10 +1,19 @@
 # Flippy
 
-### A responsive/mobile-capable web app game created with HTML5 Canvas and Javascript and jQuery (and jQueryMobile) libraries. It is pitch-controlled and completely rendered with Canvas as well as integrates JavaScript’s Web Audio API and AJAX, MySQL, node.js and express.js on the server-side.
+## A simple, responsive/mobile-capable, pitch-controlled web app game!
 
-#### Play at: heartso.me/projects/flippy.html
+### Play at: http://flippy.heartso.me
 
-### Fork me! :)) 
+#### Fork me! :)) 
+
+## Tech
+###* [HTML5](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5), [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+###* Javascript (and Javascript's [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API))
+###* and [jQuery](http://api.jquery.com/) (and [jQueryMobile](http://api.jquerymobile.com/))
+###* [AJAX](http://api.jquery.com/category/ajax/)
+###* [Node.js](http://nodejs.org/api/)
+###* [Express.js](http://expressjs.com/)
+###* [MySQL](https://www.npmjs.com/package/mysql)
 
 ## Screenshots:
 
@@ -26,6 +35,5 @@
     * -x-Change all absolute measurements to relative to screen sizes
     * ---Add mobile events
         * ---Start game on tap, pause on tap
-* ---Proxypass
 * ---Test database, form and leaderboard functionalities
 

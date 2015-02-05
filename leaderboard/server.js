@@ -31,7 +31,7 @@ function isInt(a){
 }
 
 // Post to database
-app.post('/leaderboard', function (req, res) {
+app.post('/leaderboard/', function (req, res) {
     
     connection.connect();
     
@@ -44,7 +44,7 @@ app.post('/leaderboard', function (req, res) {
 
 
 // Get from database
-app.get('/leaderboard', function (req, res) {
+app.get('/leaderboard/', function (req, res) {
     
     connection.connect();
     

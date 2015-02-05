@@ -9,10 +9,15 @@
   },
   "keywords": [
     "canvas",
-    "html5",
-    "javascript",
-    "jquery",
-    "mysql"
+    "HTML5",
+    "JavaScript",
+    "jQuery",
+    "jQueryMobile",
+    "mysql",
+    "AJAX",
+    "ExpressJS",
+    "Node.js",
+    "Web Audio API"
   ],
   "author": "Tiffany Chow",
   "license": "ISC",
