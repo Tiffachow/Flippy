@@ -12,8 +12,9 @@
 ###* and [jQuery](http://api.jquery.com/) (and [jQueryMobile](http://api.jquerymobile.com/))
 ###* [AJAX](http://api.jquery.com/category/ajax/)
 ###* [Node.js](http://nodejs.org/api/)
+###* [Foreverjs/Forever-Monitor](https://github.com/foreverjs/forever-monitor)
 ###* [Express.js](http://expressjs.com/)
-###* [MySQL](https://www.npmjs.com/package/mysql)
+###* [MySQL](http://dev.mysql.com/doc/refman/5.7/en/) & [MySQL Driver (NPM)](https://www.npmjs.com/package/mysql)
 
 ## Screenshots:
 
