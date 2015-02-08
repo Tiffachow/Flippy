@@ -28,7 +28,8 @@
         make run
    
    #If running on ubuntu and you want to run flippy as a service:
-        #edit setup.env to match your mysql configuration
+        #edit example.setup.env to match your mysql configuration
+        cp example.setup.env setup.env
         make db
         cp assets/scripts/flippy /etc/init.d/flippy
         sudo service flippy start

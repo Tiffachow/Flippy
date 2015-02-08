@@ -1408,7 +1408,7 @@ function submitScoreviewLeaderboard() {
             var alias = $("#alias").val();
             submitted = false;
             
-            if (isAlphaNum(alias)) {
+            if (isAlphaNum(alias) && $("#alias").val().length != 0) {
             
                 $.ajax({
                     url: "/leaderboard/",
