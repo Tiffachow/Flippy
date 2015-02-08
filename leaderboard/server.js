@@ -32,10 +32,14 @@ child.on('exit', function () {
 child.start();
 
 var connection = mysql.createConnection({ // to connect to database
-    host     : 'localhost',
-    user     : 'tiffachow',
-    password : 'scoresdatabase',
-    database : 'scores'
+    host     : '$DB_HOST',
+    user     : '$DB_USERNAME', // get environment variables
+    password : '$DB_PASSWORD',
+    database : '$DB_NAME'
+});
+
+connection.on('error', function (err) {
+    console.log(err);
 });
 
 var app = express();
@@ -58,10 +62,19 @@ function isInt(a){
 // Post to database
 app.post('/leaderboard/', function (req, res) {
     
-    connection.connect();
+    function handleDisconnect() {
+        connection.connect(function(err) {              // The server is either down
+            if(err) {                                     // or restarting (takes a while sometimes).
+              console.log('error when connecting to db:', err);
+              setTimeout(handleDisconnect, 2000); // delay before attempting to reconnect to avoid a hot loop, and to allow our node script to process asynchronous requests in the meantime
+            }
+        });
+    }
     
     if (isAlphaNum(req.body.alias) && isInt(req.body.score)) {
-        connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')");
+        connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')", function(err, rows, fields) {
+            if (err) throw err;
+        });
     }
     
     connection.end();
@@ -71,7 +84,14 @@ app.post('/leaderboard/', function (req, res) {
 // Get from database
 app.get('/leaderboard/', function (req, res) {
     
-    connection.connect();
+    function handleDisconnect() {
+        connection.connect(function(err) {              // The server is either down
+            if(err) {                                     // or restarting (takes a while sometimes).
+              console.log('error when connecting to db:', err);
+              setTimeout(handleDisconnect, 2000); // delay before attempting to reconnect to avoid a hot loop, and to allow our node script to process asynchronous requests in the meantime
+            }
+        });
+    }
     
     connection.query("SELECT scores FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
         if (err) throw err;

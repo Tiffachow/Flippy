@@ -7,14 +7,32 @@
 #### Fork me! :)) 
 
 ## Tech
-###* [HTML5](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5), [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
-###* Javascript (and Javascript's [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API))
-###* and [jQuery](http://api.jquery.com/) (and [jQueryMobile](http://api.jquerymobile.com/))
-###* [AJAX](http://api.jquery.com/category/ajax/)
-###* [Node.js](http://nodejs.org/api/)
-###* [Foreverjs/Forever-Monitor](https://github.com/foreverjs/forever-monitor)
-###* [Express.js](http://expressjs.com/)
-###* [MySQL](http://dev.mysql.com/doc/refman/5.7/en/) & [MySQL Driver (NPM)](https://www.npmjs.com/package/mysql)
+####* [HTML5](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5), [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+####* Javascript (and Javascript's [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API))
+####* and [jQuery](http://api.jquery.com/) (and [jQueryMobile](http://api.jquerymobile.com/))
+####* [AJAX](http://api.jquery.com/category/ajax/)
+####* [Node.js](http://nodejs.org/api/)
+####* [Foreverjs: Forever-Monitor](https://github.com/foreverjs/forever-monitor)
+####* [Express.js](http://expressjs.com/)
+####* [MySQL](http://dev.mysql.com/doc/refman/5.7/en/) & [MySQL Driver (NPM)](https://www.npmjs.com/package/mysql)
+
+##INSTALL
+```sh
+   git clone https://github.com/Tiffachow/Flippy.git
+   npm install
+   #set up your own environment variables for your mysql database configuration:
+   #$DB_HOST: mysql server host, $DB_USERNAME: database username, $DB_PASSWORD: database password, $DB_NAME: database name
+   
+   #If not running Flippy as a service:
+        make db
+        make run
+   
+   #If running on ubuntu and you want to run flippy as a service:
+        #edit setup.env to match your mysql configuration
+        make db
+        cp assets/scripts/flippy /etc/init.d/flippy
+        sudo service flippy start
+```
 
 ## Screenshots:
 

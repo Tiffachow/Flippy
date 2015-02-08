@@ -1371,10 +1371,10 @@ function submitScoreviewLeaderboard() {
         return !reg.test(a);
     }
     
-    //TODO
-    score_form.not().click(function() {
-        score_form.hide();  
-    });
+    // //TODO
+    // score_form.not().click(function() {
+    //     score_form.hide();  
+    // });
     
     $(document).on("click tap", function(ev) { // Check if player has clicked
 
@@ -1416,8 +1416,9 @@ function submitScoreviewLeaderboard() {
                     data: {alias:alias, score:msElapsed},
                 }).done(function(){
                     console.log("New score added to database!");
-                }).fail(function() {
+                }).fail(function(a, b, c) {
                     console.log("Failed to add new score to database.");
+                    console.log(a, b, c);
                 });
                 
                 score_form.hide();
@@ -1593,10 +1594,11 @@ function removeLoad() {
 
 //TODO:
 /*
+---AJAX POST function needs to be redone
+---Figure out forever-monitor implementation / why it's not running continuously
 ---Exclude drawing trails off screen
 ---BUG: submits score twice
 ---Close form/leaderboard when clicked outside of those elements
----Proxypass
 ---Test database, form and leaderboard functionalities
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
