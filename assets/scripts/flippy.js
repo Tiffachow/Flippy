@@ -1424,7 +1424,7 @@ function submitScoreviewLeaderboard() {
                 score_form.hide();
             }
             else {
-                alert("Letters, numbers, and space only!");
+                alert("Letters, numbers, and space only! Alias cannot be blank.");
             }
             
         }

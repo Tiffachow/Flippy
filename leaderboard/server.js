@@ -70,6 +70,7 @@ app.post('/leaderboard/', function (req, res) {
             }
         });
     }
+    handleDisconnect();
     
     if (isAlphaNum(req.body.alias) && isInt(req.body.score)) {
         connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')", function(err, rows, fields) {
@@ -92,6 +93,7 @@ app.get('/leaderboard/', function (req, res) {
             }
         });
     }
+    handleDisconnect();
     
     connection.query("SELECT scores FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
         if (err) throw err;
