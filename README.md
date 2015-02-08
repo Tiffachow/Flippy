@@ -25,14 +25,14 @@
    
    #If not running Flippy as a service:
    echo "CREATE DATABASE $DB_NAME" | mysql -u $DB_USERNAME --password=$DB_PASSWORD
-   make db
+   make database
    make run
    
    #If running on ubuntu and you want to run flippy as a service:
    #edit example.setup.env to match your mysql configuration
    cp example.setup.env setup.env
    echo "CREATE DATABASE $DB_NAME" | mysql -u $DB_USERNAME --password=$DB_PASSWORD
-   make db
+   make database
    cp assets/scripts/flippy /etc/init.d/flippy
    sudo service flippy start
 ```
