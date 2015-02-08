@@ -24,15 +24,17 @@
    #$DB_HOST: mysql server host, $DB_USERNAME: database username, $DB_PASSWORD: database password, $DB_NAME: database name
    
    #If not running Flippy as a service:
-        make db
-        make run
+   echo "CREATE DATABASE $DB_NAME" | mysql -u root --password=$DB_PASSWORD
+   make db
+   make run
    
    #If running on ubuntu and you want to run flippy as a service:
-        #edit example.setup.env to match your mysql configuration
-        cp example.setup.env setup.env
-        make db
-        cp assets/scripts/flippy /etc/init.d/flippy
-        sudo service flippy start
+   #edit example.setup.env to match your mysql configuration
+   cp example.setup.env setup.env
+   echo "CREATE DATABASE $DB_NAME" | mysql -u root --password=$DB_PASSWORD
+   make db
+   cp assets/scripts/flippy /etc/init.d/flippy
+   sudo service flippy start
 ```
 
 ## Screenshots:
