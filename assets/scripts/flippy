@@ -39,8 +39,8 @@ case "$1" in
             echo "Unable to start, see $stdout_log and $stderr_log"
             exit 1
         fi
-        if [ -f setup.env ]; then
-            source setup.env
+        if [ -f "setup.env" ]; then
+            source "setup.env"
         else
             echo "Environment setup file doesn't exist"
             exit 1
