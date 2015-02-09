@@ -173,7 +173,6 @@ canvas {
     height: calc(100% - 140px);
     width: 100%;
     overflow: scroll;
-    border: 1px solid #000;
 }
 
 #top-entries h2 {
