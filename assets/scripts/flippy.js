@@ -1446,7 +1446,6 @@ function submitScoreviewLeaderboard() {
             $.ajax({ // Get data from database                                        
               url: '/leaderboard',
               type: "GET",
-              dataType: "text",
             }).done(function(data)
               { // Print past top scores in leaderboard
               
