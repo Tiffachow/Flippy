@@ -4,5 +4,5 @@ database:
         @echo $(CREATETABLE) | mysql -u $(DB_USERNAME) -p$(DB_PASSWORD)  
 
 run:
-        @node leaderboard/server.js
+        @node leaderboard/foreverrun.js
         
