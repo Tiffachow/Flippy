@@ -1413,10 +1413,9 @@ function submitScoreviewLeaderboard() {
                 $.ajax({
                     url: "/leaderboard",
                     type: "POST",
-                    data: {alias:alias, score:msElapsed},
-                    processData: false
-                }).done(function(){
-                    console.log("New score added to database!");
+                    data: {alias:alias, score:msElapsed}
+                }).done(function(success){
+                    console.log("New score added to database! " + success);
                 }).fail(function(a, b, c) {
                     console.log("Failed to add new score to database.");
                     console.log(a, b, c);
@@ -1451,6 +1450,7 @@ function submitScoreviewLeaderboard() {
               
                 console.log(data); 
                 var entries = data.result;
+                console.log("data.result = " + entries + " and data.result.length = " + entries.length);
                 
                 for (var i = 0; i <= entries.length; i++) {
                     
