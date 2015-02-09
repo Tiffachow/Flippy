@@ -1239,105 +1239,110 @@ function loadRetry() {
         }
     });
     
-    $(document).on("click tap", function(ev) { // Check if player has clicked
+    if (onMobile) {
+        $(document).on("tap", retry);
+    }
+    $(document).on("click", retry);
+}
 
-        // Is the mouse over retry area  while game is over (and player has clicked)?
-        if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
+function retry(ev) { // Check if player has clicked
+
+    // Is the mouse over retry area  while game is over (and player has clicked)?
+    if (mouse_retry_x >= RETRY_X && mouse_retry_x <= (RETRY_X + RETRY_WIDTH) && mouse_retry_y <= (RETRY_Y) && mouse_retry_y >= (RETRY_Y - RETRY_HEIGHT + 40) && isGameOver == "yes") {
+        
+        // Allow player to RETRY by resetting render()'s variables to its initial values and running render
+        
+        clearTimeout(renderTimeout);
+        ACCELERATION = 60;
+        score_form.hide();
+        leaderboard.hide();
+        
+        // Reset the line position and view position
+        position = {
+            y: BASE_POS,
+            cat_x: canvas.width / 2,
+            background: 0,
+            sun_x: canvas.width - sun.width / 2,
+            sun_y: canvas.height - sun.height / 2,
+            sun_theta: 0,
+            moon_x: 0 - moon.width / 2,
+            moon_y: canvas.height - moon.height / 2,
+            moon_theta: 1
+        };
+        view = {
+            left_x: 0,
+            left_x_copy: 0,
+            right_x: canvas.width
+        };
+        
+        // Reset the clouds positions
+        cloudPos.x = [ // Cloud x coords
+            cloudXPathArea * Math.random(),
+            cloudXPathArea * Math.random(),
+            cloudXPathArea * Math.random(),
+            cloudXPathArea * Math.random()
+        ];
+        
+        cloudPos.init_y = [ // Cloud y-coords
+            cloudYPathArea * rnd[0],
+            cloudYPathArea * rnd[1],
+            cloudYPathArea * rnd[2],
+            cloudYPathArea * rnd[3]
+        ];
             
-            // Allow player to RETRY by resetting render()'s variables to its initial values and running render
+        cloudPos.current_y = [ // Copy of initial y-coords
+            cloudYPathArea * rnd[0],
+            cloudYPathArea * rnd[1],
+            cloudYPathArea * rnd[2],
+            cloudYPathArea * rnd[3]
+        ];
             
-            clearTimeout(renderTimeout);
-            ACCELERATION = 60;
-            score_form.hide();
-            leaderboard.hide();
-            
-            // Reset the line position and view position
-            position = {
-                y: BASE_POS,
-                cat_x: canvas.width / 2,
-                background: 0,
-                sun_x: canvas.width - sun.width / 2,
-                sun_y: canvas.height - sun.height / 2,
-                sun_theta: 0,
-                moon_x: 0 - moon.width / 2,
-                moon_y: canvas.height - moon.height / 2,
-                moon_theta: 1
-            };
-            view = {
-                left_x: 0,
-                left_x_copy: 0,
-                right_x: canvas.width
-            };
-            
-            // Reset the clouds positions
-            cloudPos.x = [ // Cloud x coords
-                cloudXPathArea * Math.random(),
-                cloudXPathArea * Math.random(),
-                cloudXPathArea * Math.random(),
-                cloudXPathArea * Math.random()
-            ];
-            
-            cloudPos.init_y = [ // Cloud y-coords
-                cloudYPathArea * rnd[0],
-                cloudYPathArea * rnd[1],
-                cloudYPathArea * rnd[2],
-                cloudYPathArea * rnd[3]
-            ];
-                
-            cloudPos.current_y = [ // Copy of initial y-coords
-                cloudYPathArea * rnd[0],
-                cloudYPathArea * rnd[1],
-                cloudYPathArea * rnd[2],
-                cloudYPathArea * rnd[3]
-            ];
-                
-            isReverse = [false, false, false, false]; // Reset clouds x movement directions
-            upDir = true; // Reset clouds y movement direction
-            
-            // Reset cloud sizes
-            rnd = [
-                Math.random(),
-                Math.random(),
-                Math.random(),
-                Math.random(),
-                Math.random() + 0.3,
-                Math.random() + 0.3,
-                Math.random() + 0.3,
-                Math.random() + 0.3
-            ];
-            
-            cloudSize[0] = [ // Cloud width
-                cloud.width * rnd[4],
-                cloud.width * rnd[5], 
-                cloud.width * rnd[6], 
-                cloud.width * rnd[7]
-            ]; 
-            cloudSize[1] = [ // Cloud height
-                cloud.height * rnd[4], 
-                cloud.height * rnd[5], 
-                cloud.height * rnd[6], 
-                cloud.height * rnd[7]
-            ]; 
-            
-            // Clear the history arrays
-            positionHistory.length = 0;
-            lastElems.length = 0;
-            tailPosHistory.length = 0;
-            
-            // Reset the character to default position
-            currentPitch = null;
-            upTriggered = false;
-            downTriggered = false;
-            lastCharDirection = "up";
-            crop = {x:0, y:0};
-            
-            // Run the game!
-            render();
-            
-            // Cue flippy noise!
-            beginAudio.play();
-        }
-    });
+        isReverse = [false, false, false, false]; // Reset clouds x movement directions
+        upDir = true; // Reset clouds y movement direction
+        
+        // Reset cloud sizes
+        rnd = [
+            Math.random(),
+            Math.random(),
+            Math.random(),
+            Math.random(),
+            Math.random() + 0.3,
+            Math.random() + 0.3,
+            Math.random() + 0.3,
+            Math.random() + 0.3
+        ];
+        
+        cloudSize[0] = [ // Cloud width
+            cloud.width * rnd[4],
+            cloud.width * rnd[5], 
+            cloud.width * rnd[6], 
+            cloud.width * rnd[7]
+        ]; 
+        cloudSize[1] = [ // Cloud height
+            cloud.height * rnd[4], 
+            cloud.height * rnd[5], 
+            cloud.height * rnd[6], 
+            cloud.height * rnd[7]
+        ]; 
+        
+        // Clear the history arrays
+        positionHistory.length = 0;
+        lastElems.length = 0;
+        tailPosHistory.length = 0;
+        
+        // Reset the character to default position
+        currentPitch = null;
+        upTriggered = false;
+        downTriggered = false;
+        lastCharDirection = "up";
+        crop = {x:0, y:0};
+        
+        // Run the game!
+        render();
+        
+        // Cue flippy noise!
+        beginAudio.play();
+    }
 }
 
 function submitScoreviewLeaderboard() {
@@ -1366,108 +1371,119 @@ function submitScoreviewLeaderboard() {
         }
     });
     
-    function isAlphaNum(a) {
-        var reg = /[^A-Za-z0-9 ]/;
-        return !reg.test(a);
-    }
-    
     // //TODO
     // score_form.not().click(function() {
     //     score_form.hide();  
     // });
     
-    $(document).on("click tap", function(ev) { // Check if player has clicked
+    if (onMobile) {
+        $(document).on("tap", showSubmitScoreOrLeaderboard);
+    }
+    $(document).on("click", showSubmitScoreOrLeaderboard);
+}
 
-        // Is the mouse over submit score link while game is over (and player has clicked)?
-        if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
-            
-            // Show form and hide leaderboard
-            if (onMobile) {
-                score_form.css({
-                    width: "80%",
-                    top: "40%",
-                    left: "calc((20% - 20px)/2)"
-                });
-            }
-            score_form.show();
-            leaderboard.hide();
-            
-            // On form, let players know the score they're submitting
-            score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
-            $("#score-detail").html(score_string);
-            
-        }
+function isAlphaNum(a) {
+    var reg = /[^A-Za-z0-9 ]/;
+    return !reg.test(a);
+}
+
+function showSubmitScoreOrLeaderboard(ev) { // Check if player has clicked
+
+    // Is the mouse over submit score link while game is over (and player has clicked)?
+    if (mouse_score_x >= SCORE_X && mouse_score_x <= (SCORE_X + SCORE_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
         
-        // Check if player submitted form
-        $("#submit").on("click tap", function(event){
+        // Show form and hide leaderboard
+        if (onMobile) {
+            score_form.css({
+                width: "80%",
+                top: "40%",
+                left: "calc((20% - 20px)/2)"
+            });
+        }
+        score_form.show();
+        leaderboard.hide();
+        
+        // On form, let players know the score they're submitting
+        score_string = "Your score : "+timer.minElapsed.toString()+" m "+timer.secCounter.toString()+" s "+timer.msCounter.toString()+" ms ";
+        $("#score-detail").html(score_string);
+        
+    }
+    
+    // Check if player submitted form
+    $("#submit").on("click", function(event){
+        submitted = true;
+    });
+    
+    if (onMobile) {
+        $("#submit").on("tap", function(event){
             submitted = true;
         });
+    }
+    
+    // On submitting our form, send player's alias and score to the server
+    if (submitted) {
+        var alias = $("#alias").val();
+        submitted = false;
         
-        // On submitting our form, send player's alias and score to the server
-        if (submitted) {
-            var alias = $("#alias").val();
-            submitted = false;
-            
-            if (isAlphaNum(alias) && $("#alias").val().length != 0) {
-            
-                $.ajax({
-                    url: "/leaderboard",
-                    type: "POST",
-                    data: {alias:alias, score:msElapsed}
-                }).done(function(success){
-                    console.log("New score added to database! " + success);
-                }).fail(function(a, b, c) {
-                    console.log("Failed to add new score to database.");
-                    console.log(a, b, c);
-                });
-                
-                score_form.hide();
-            }
-            else {
-                alert("Letters, numbers, and space only! Alias cannot be blank.");
-            }
-            
-        }
+        if (isAlphaNum(alias) && $("#alias").val().length != 0) {
         
-        // If leaderboard link is clicked...
-        else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+            $.ajax({
+                url: "/leaderboard",
+                type: "POST",
+                data: {alias:alias, score:msElapsed}
+            }).done(function(success){
+                console.log("New score added to database! " + success);
+            }).fail(function(a, b, c) {
+                console.log("Failed to add new score to database.");
+                console.log(a, b, c);
+            });
             
-            if (onMobile) {
-                leaderboard.css({
-                    width: "80%",
-                    top: "35%",
-                    left: "calc((20% - 20px)/2)"
-                });
-            }
-            leaderboard.show();
             score_form.hide();
-        
-            $.ajax({ // Get data from database                                        
-              url: '/leaderboard',
-              type: "GET",
-            }).done(function(data)
-              { // Print past top scores in leaderboard
-              
-                var entries = data.result;
-                console.log(data + "<br> data.result = " + entries + "<br> and data.result.length = " + entries.length);
-                var listTopEntries = "";
-                
-                for (var i = 0; i <= entries.length; i++) {
-                    
-                    calcScore(entries[i].score);
-                    listTopEntries += entries[i].alias + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
-                    
-                    $('#top_entries').html(listTopEntries); // Update Leaderboard!
-                
-                    console.log(listTopEntries);
-                }
-                
-              }).fail(function(a, b, c) { 
-                  console.log(a, b, c);
-              });
-            
         }
-    });
+        else {
+            alert("Letters, numbers, and space only! Alias cannot be blank.");
+        }
+        
+    }
+    
+    // If leaderboard link is clicked...
+    else if (mouse_score_x >= LEADER_X && mouse_score_x <= (LEADER_X + LEADER_WIDTH) && mouse_score_y <= SCORE_Y && mouse_score_y >= (SCORE_Y - SCORE_HEIGHT) && isGameOver == "yes") {
+        
+        if (onMobile) {
+            leaderboard.css({
+                width: "80%",
+                top: "35%",
+                left: "calc((20% - 20px)/2)"
+            });
+        }
+        leaderboard.show();
+        score_form.hide();
+    
+        $.ajax({ // Get data from database                                        
+          url: '/leaderboard',
+          type: "GET",
+        }).done(function(data)
+          { // Print past top scores in leaderboard
+          
+            var entries = data.result;
+            console.log(data + "<br> data.result = " + entries + "<br> and data.result.length = " + entries.length);
+            var listTopEntries = "";
+            
+            for (var i = 0; i <= entries.length; i++) {
+                
+                calcScore(entries[i].score);
+                listTopEntries += entries[i].alias + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
+                
+                $('#top_entries').html(listTopEntries); // Update Leaderboard!
+            
+                console.log(listTopEntries);
+            }
+            
+          }).fail(function(a, b, c) { 
+              console.log(a, b, c);
+          });
+        
+    }
 }
 
 // Draw pause control reference on side once game has started
