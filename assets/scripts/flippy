@@ -40,7 +40,7 @@ case "$1" in
             exit 1
         fi
         if [ -f "setup.env" ]; then
-            source "setup.env"
+            . ./setup.env
         else
             echo "Environment setup file doesn't exist"
             exit 1

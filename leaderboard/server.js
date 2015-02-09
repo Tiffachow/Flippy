@@ -32,10 +32,10 @@ child.on('exit', function () {
 child.start();
 
 var connection = mysql.createConnection({ // to connect to database
-    host     : '$DB_HOST',
-    user     : '$DB_USERNAME', // get environment variables
-    password : '$DB_PASSWORD',
-    database : '$DB_NAME'
+    host     : process.env.DB_HOST,
+    user     : process.env.DB_USERNAME, // get environment variables
+    password : process.env.DB_PASSWORD,
+    database : process.env.DB_NAME
 });
 
 connection.on('error', function (err) {
