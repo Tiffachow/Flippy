@@ -71,6 +71,11 @@ app.post('/leaderboard', function (req, res) {
                 throw err;
             }
         });
+        
+        res.json({result: "Success!"});
+    }
+    else {
+        res.json({result: "Error!"});
     }
 });
 
