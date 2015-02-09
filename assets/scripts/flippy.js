@@ -1470,14 +1470,13 @@ function showSubmitScoreOrLeaderboard(ev) { // Check if player has clicked
             var listTopEntries = "";
             
             for (var i = 0; i <= entries.length; i++) {
-                
                 calcScore(entries[i].score);
                 listTopEntries += entries[i].alias + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
-                
-                $('#top_entries').html(listTopEntries); // Update Leaderboard!
-            
-                console.log(listTopEntries);
+                console.log("entries[i].score =" + entries[i].score);
             }
+            
+            $('#top-entries').html(listTopEntries); // Update Leaderboard!
+            console.log(listTopEntries);
             
           }).fail(function(a, b, c) { 
               console.log(a, b, c);
@@ -1616,7 +1615,6 @@ function removeLoad() {
 ---AJAX POST function needs to be redone
 ---Figure out forever-monitor implementation / why it's not running continuously
 ---Exclude drawing trails off screen
----BUG: submits score twice
 ---Close form/leaderboard when clicked outside of those elements
 ---Test database, form and leaderboard functionalities
 ---Make mobile compatible
