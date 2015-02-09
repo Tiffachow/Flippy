@@ -6,7 +6,33 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     multer = require('multer');
 
-var connection = mysql.createConnection({ // to connect to database
+// http://stackoverflow.com/questions/14087924/cannot-enqueue-handshake-after-invoking-quitu
+function initializeConnection(config) {
+    function addDisconnectHandler(connection) {
+        connection.on("error", function (error) {
+            if (error instanceof Error) {
+                if (error.code === "PROTOCOL_CONNECTION_LOST") {
+                    console.error(error.stack);
+                    console.log("Lost connection. Reconnecting...");
+
+                    initializeConnection(connection.config);
+                } else if (error.fatal) {
+                    throw error;
+                }
+            }
+        });
+    }
+
+    var connection = mysql.createConnection(config);
+
+    // Add handlers.
+    addDisconnectHandler(connection);
+
+    connection.connect();
+    return connection;
+}
+
+var connection = initializeConnection({ // to connect to database
     host     : process.env.DB_HOST,
     user     : process.env.DB_USERNAME, // get environment variables
     password : process.env.DB_PASSWORD,
@@ -36,19 +62,6 @@ function isInt(a){
 
 // Post to database
 app.post('/leaderboard', function (req, res) {
-    
-    function handleDisconnect() {
-        connection.connect(function(err) {              // The server is either down
-            if(err) {                                     // or restarting (takes a while sometimes).
-              console.log('Error when connecting to db:', err);
-              // delay before attempting to reconnect to avoid a hot loop, and to allow 
-              // our node script to process asynchronous requests in the meantime
-              setTimeout(handleDisconnect, 2000); 
-            }
-        });
-    }
-    handleDisconnect();
-    
     var alias = req.body.alias,
         score = req.body.score;
     if (isAlphaNum(alias) && isInt(score)) {
@@ -59,32 +72,15 @@ app.post('/leaderboard', function (req, res) {
             }
         });
     }
-    
-    connection.end();
 });
 
 
 // Get from database
 app.get('/leaderboard', function (req, res) {
-    
-    function handleDisconnect() {
-        connection.connect(function(err) {              // The server is either down
-            if(err) {                                     // or restarting (takes a while sometimes).
-              console.log('error when connecting to db:', err);
-              // delay before attempting to reconnect to avoid a hot loop, and to allow 
-              // our node script to process asynchronous requests in the meantime
-              setTimeout(handleDisconnect, 2000); 
-            }
-        });
-    }
-    handleDisconnect();
-    
     connection.query("SELECT alias, score FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
         if (err) throw err;
         res.json({result: rows});
     });
-    
-    connection.end();
 });
 
 
