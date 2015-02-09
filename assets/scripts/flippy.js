@@ -1448,16 +1448,18 @@ function submitScoreviewLeaderboard() {
             }).done(function(data)
               { // Print past top scores in leaderboard
               
-                console.log(data); 
                 var entries = data.result;
-                console.log("data.result = " + entries + " and data.result.length = " + entries.length);
+                console.log(data + "<br> data.result = " + entries + "<br> and data.result.length = " + entries.length);
+                var listTopEntries = "";
                 
                 for (var i = 0; i <= entries.length; i++) {
                     
                     calcScore(entries[i].score);
-                    $('#top_entries').html(entries[i].id + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>"); // Update Leaderboard!
+                    listTopEntries += entries[i].alias + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
+                    
+                    $('#top_entries').html(listTopEntries); // Update Leaderboard!
                 
-                    console.log(entries[i].id + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms ");
+                    console.log(listTopEntries);
                 }
                 
               }).fail(function(a, b, c) { 
