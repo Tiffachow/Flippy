@@ -148,12 +148,11 @@ canvas {
     border-radius: 15px;
     border: 10px solid #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.7);
-    text-shadow: 0 0 10px rgba(0,0,0,0.7);
+    text-shadow: 0 0 10px rgba(255,255,255,0.7);
     background: #ffde2b;
     color: #fff;
     font: 400 20px/1em "Indie Flower", Arial, sans-serif;
     text-align: center;
-    overflow: scroll;
 }
 
 #leaderboard h1 {
@@ -166,6 +165,15 @@ canvas {
 #leaderboard h2 {
     word-spacing: 30px;
     padding: 10px;
+}
+
+#top-entries {
+    position: absolute;
+    top: 130px;
+    height: calc(100% - 140px);
+    width: 100%;
+    overflow: scroll;
+    border: 1px solid #000;
 }
 
 #top-entries h2 {
