@@ -60,12 +60,12 @@ function isInt(a){
 }
 
 // Post to database
-app.post('/leaderboard/', function (req, res) {
+app.post('/leaderboard', function (req, res) {
     
     function handleDisconnect() {
         connection.connect(function(err) {              // The server is either down
             if(err) {                                     // or restarting (takes a while sometimes).
-              console.log('error when connecting to db:', err);
+              console.log('Error when connecting to db:', err);
               setTimeout(handleDisconnect, 2000); // delay before attempting to reconnect to avoid a hot loop, and to allow our node script to process asynchronous requests in the meantime
             }
         });
@@ -75,6 +75,7 @@ app.post('/leaderboard/', function (req, res) {
     if (isAlphaNum(req.body.alias) && isInt(req.body.score)) {
         connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')", function(err, rows, fields) {
             if (err) throw err;
+            console.log("Failed to add to database: error:" + err);
         });
     }
     
@@ -83,7 +84,7 @@ app.post('/leaderboard/', function (req, res) {
 
 
 // Get from database
-app.get('/leaderboard/', function (req, res) {
+app.get('/leaderboard', function (req, res) {
     
     function handleDisconnect() {
         connection.connect(function(err) {              // The server is either down

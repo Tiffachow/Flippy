@@ -1411,9 +1411,10 @@ function submitScoreviewLeaderboard() {
             if (isAlphaNum(alias) && $("#alias").val().length != 0) {
             
                 $.ajax({
-                    url: "/leaderboard/",
+                    url: "/leaderboard",
                     type: "POST",
                     data: {alias:alias, score:msElapsed},
+                    processData: false
                 }).done(function(){
                     console.log("New score added to database!");
                 }).fail(function(a, b, c) {
@@ -1443,7 +1444,7 @@ function submitScoreviewLeaderboard() {
             score_form.hide();
         
             $.ajax({ // Get data from database                                        
-              url: '/leaderboard/',
+              url: '/leaderboard',
               type: "GET",
               dataType: "text",
             }).done(function(data)
