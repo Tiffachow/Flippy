@@ -49,8 +49,10 @@ app.post('/leaderboard', function (req, res) {
     }
     handleDisconnect();
     
-    if (isAlphaNum(req.body.alias) && isInt(req.body.score)) {
-        connection.query("INSERT INTO scores (id, alias, score) VALUES ('NULL','[alias]','[score]')", function(err, rows, fields) {
+    var alias = req.body.alias,
+        score = req.body.score;
+    if (isAlphaNum(alias) && isInt(score)) {
+        connection.query("INSERT INTO scores (alias, score) VALUES ('"+alias+"','"+score+"')", function(err, rows, fields) {
             if (err) throw err;
             console.log("Failed to add to database: error:" + err);
         });
