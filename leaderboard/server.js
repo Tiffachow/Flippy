@@ -41,7 +41,9 @@ app.post('/leaderboard', function (req, res) {
         connection.connect(function(err) {              // The server is either down
             if(err) {                                     // or restarting (takes a while sometimes).
               console.log('Error when connecting to db:', err);
-              setTimeout(handleDisconnect, 2000); // delay before attempting to reconnect to avoid a hot loop, and to allow our node script to process asynchronous requests in the meantime
+              // delay before attempting to reconnect to avoid a hot loop, and to allow 
+              // our node script to process asynchronous requests in the meantime
+              setTimeout(handleDisconnect, 2000); 
             }
         });
     }
@@ -65,13 +67,15 @@ app.get('/leaderboard', function (req, res) {
         connection.connect(function(err) {              // The server is either down
             if(err) {                                     // or restarting (takes a while sometimes).
               console.log('error when connecting to db:', err);
-              setTimeout(handleDisconnect, 2000); // delay before attempting to reconnect to avoid a hot loop, and to allow our node script to process asynchronous requests in the meantime
+              // delay before attempting to reconnect to avoid a hot loop, and to allow 
+              // our node script to process asynchronous requests in the meantime
+              setTimeout(handleDisconnect, 2000); 
             }
         });
     }
     handleDisconnect();
     
-    connection.query("SELECT scores FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
+    connection.query("SELECT alias, score FROM scores ORDER BY score DESC LIMIT 500", function(err, rows, fields) {
         if (err) throw err;
         res.json({result: rows});
     });
