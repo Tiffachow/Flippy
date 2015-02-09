@@ -1469,7 +1469,7 @@ function showSubmitScoreOrLeaderboard(ev) { // Check if player has clicked
             console.log(data + "<br> data.result = " + entries + "<br> and data.result.length = " + entries.length);
             var listTopEntries = "";
             
-            for (var i = 0; i <= entries.length; i++) {
+            for (var i = 0; i < entries.length; i++) {
                 calcScore(entries[i].score);
                 listTopEntries += entries[i].alias + " " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
                 console.log("entries[i].score =" + entries[i].score);
