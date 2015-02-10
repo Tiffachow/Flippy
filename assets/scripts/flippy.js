@@ -1239,6 +1239,8 @@ function loadRetry() {
         }
     });
     
+    $(document).off("keydown", allEventsHandler);
+    
     if (onMobile) {
         $(document).on("tap", retry);
     }
@@ -1252,10 +1254,13 @@ function retry(ev) { // Check if player has clicked
         
         // Allow player to RETRY by resetting render()'s variables to its initial values and running render
         
+        isGameOver = false;
         clearTimeout(renderTimeout);
         ACCELERATION = 60;
         score_form.hide();
         leaderboard.hide();
+        
+        $(document).on("keydown", allEventsHandler);
         
         // Reset the line position and view position
         position = {
@@ -1614,11 +1619,11 @@ function removeLoad() {
 
 //TODO:
 /*
----AJAX POST function needs to be redone
 ---Figure out forever-monitor implementation / why it's not running continuously
 ---Exclude drawing trails off screen
+---BUG: after using voice controls, clickable area for leaderboard and submit score links are smaller
+---Optimize for performance; too laggy
 ---Close form/leaderboard when clicked outside of those elements
----Test database, form and leaderboard functionalities
 ---Make mobile compatible
     ---Fix ugly loading screen on mobile
     -x-Change all absolute measurements to relative to screen sizes

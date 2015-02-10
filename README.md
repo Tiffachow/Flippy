@@ -49,13 +49,13 @@
 ---
 ## TODO:
 
+* ---Figure out forever-monitor implementation / why it's not running continuously
 * ---Exclude drawing trails off screen
-* ---BUG: submits score twice
+* ---BUG: after using voice controls, clickable area for leaderboard and submit score links are smaller
+* ---Optimize for performance; too laggy
 * ---Close form/leaderboard when clicked outside of those elements
 * ---Make mobile compatible
     * ---Fix ugly loading screen on mobile
     * -x-Change all absolute measurements to relative to screen sizes
     * ---Add mobile events
         * ---Start game on tap, pause on tap
-* ---Test database, form and leaderboard functionalities
-
