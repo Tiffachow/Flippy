@@ -3,7 +3,6 @@
 A simple, responsive/mobile-capable, pitch-controlled web app game!
 
 ### Play at: http://flippy.heartso.me 
-#####(leaderboard and submit score functionality currently not available in this demo w/o my manual start of the nodejs server)
 
 #### Fork me! :)) 
 
