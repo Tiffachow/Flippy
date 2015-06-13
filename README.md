@@ -1,6 +1,6 @@
 # Flippy
 
-## A simple, responsive/mobile-capable, pitch-controlled web app game!
+A simple, responsive/mobile-capable, pitch-controlled web app game!
 
 ### Play at: http://flippy.heartso.me
 
