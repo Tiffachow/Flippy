@@ -1471,7 +1471,6 @@ function showSubmitScoreOrLeaderboard(ev) { // Check if player has clicked
           { // Print past top scores in leaderboard
           
             var entries = data.result;
-            console.log(data + "<br> data.result = " + entries + "<br> and data.result.length = " + entries.length);
             var listTopEntries = "";
             var entryposition = 0;
             
@@ -1479,11 +1478,9 @@ function showSubmitScoreOrLeaderboard(ev) { // Check if player has clicked
                 calcScore(entries[i].score);
                 entryposition += 1;
                 listTopEntries += entryposition + ".  " + entries[i].alias + " ............ " + timer.minElapsed + " m " + timer.secCounter + " s " + timer.msCounter + " ms " + "<br>";
-                console.log("entries[i].score =" + entries[i].score);
             }
             
             $('#top-entries').html(listTopEntries); // Update Leaderboard!
-            console.log(listTopEntries);
             
           }).fail(function(a, b, c) { 
               console.log(a, b, c);
